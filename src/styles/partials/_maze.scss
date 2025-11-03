@@ -1,0 +1,141 @@
+/* Contenedor principal del laberinto generado */
+.labyrinth-container {
+  position: relative;
+  display: inline-block;
+  border: 2px solid #374151;
+  /* border-gray-700 */
+  border-radius: 8px;
+  overflow: hidden;
+  /* Oculta bordes extraños */
+  background-color: #ffffff;
+  /* bg-white */
+}
+
+/* Estilos para las celdas generadas por DivTraverser */
+.cell {
+  display: inline-block;
+  vertical-align: top;
+  box-sizing: border-box;
+  /* Importante! */
+  background-color: #f0f9ff;
+  /* sky-50 */
+}
+
+/* Estilos para las paredes generadas por DivTraverser */
+.wall-top {
+  border-top: 2px solid #0c4a6e;
+  /* sky-900 */
+}
+
+.wall-bottom {
+  border-bottom: 2px solid #0c4a6e;
+  /* sky-900 */
+}
+
+.wall-left {
+  border-left: 2px solid #0c4a6e;
+  /* sky-900 */
+}
+
+.wall-right {
+  border-right: 2px solid #0c4a6e;
+  /* sky-900 */
+}
+
+/* Celda final (opcional, pero mazejs la marca) */
+.cell.end {
+  background-color: #d1fae5;
+  /* emerald-100 */
+}
+
+/* Overlay del jugador */
+.player-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 0.15s linear;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.player-dot {
+  font-size: 28px;
+  /* Tamaño del emoji */
+  line-height: 1;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+}
+
+/* Estilo para el contenedor del laberinto (scroll y centrado) */
+.lab-wrapper {
+  width: 100%;
+  max-width: 90vw;
+  overflow: auto;
+  /* Añade scroll si el laberinto es muy grande */
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 0.75rem;
+  /* rounded-xl */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  /* shadow-md */
+}
+
+/* ---- Ajustes importantes para DivTraverser ---- */
+.labyrinth-container {
+  position: relative;
+  display: inline-block;
+  border: 2px solid #374151;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  padding: 0; /* importante: evita huecos internos */
+  margin: 0;
+}
+
+/* filas que contienen celdas */
+.labyrinth-container .row,
+.lab-maze-root .row {
+  display: flex;            /* filas en línea */
+  margin: 0;
+  padding: 0;
+}
+
+/* celdas: fijar tamaño con variable CSS para poder controlar desde React */
+:root { --cell-size: 40px; } /* fallback global */
+.labyrinth-container .cell,
+.lab-maze-root .cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  box-sizing: border-box;   /* que borders sumen dentro del tamaño */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  background-color: #f0f9ff; /* camino por defecto */
+}
+
+/* si DivTraverser aplica bordes por clase wall-*, se ven bien */
+.labyrinth-container .wall-top { border-top: 2px solid #0c4a6e; }
+.labyrinth-container .wall-bottom { border-bottom: 2px solid #0c4a6e; }
+.labyrinth-container .wall-left { border-left: 2px solid #0c4a6e; }
+.labyrinth-container .wall-right { border-right: 2px solid #0c4a6e; }
+
+/* celda bloqueada completa (por si hay implementaciones que usan 'wall' a secas) */
+.labyrinth-container .cell.wall,
+.lab-maze-root .cell.wall {
+  background: #222;
+}
+
+/* remover los paddings/offsets del contenido generado */
+.labyrinth-container > * { margin: 0; padding: 0; }
+
+/* overlay jugador - como ya tienes */
+.player-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 0.15s linear;
+  pointer-events: none;
+}
