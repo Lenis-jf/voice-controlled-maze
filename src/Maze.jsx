@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useCallback } from "react";
-import "./styles/main.scss";
 
 function index(i, j, cols, rows) {
   if (i < 0 || j < 0 || i >= cols || j >= rows) {
@@ -29,6 +28,66 @@ function removeWalls(current, next) {
   }
 }
 
+function findNeighborsBFS(cell, cells) {
+  const localCells = cells;
+  const neighbors = [];
+
+  const top = cell.walls[0] ? null : localCells[index(cell.i, cell.j -1, cell.cols, cell.rows)];
+  const right = cell.walls[1] ? null : localCells[index(cell.i + 1, cell.j, cell.cols, cell.rows)];
+  const bottom = cell.walls[2] ? null : localCells[index(cell.i, cell.j + 1, cell.cols, cell.rows)];
+  const left = cell.walls[3] ? null : localCells[index(cell.i - 1, cell.j, cell.cols, cell.rows)];
+
+  if (top) neighbors.push(top);
+  if (right) neighbors.push(right);
+  if (bottom) neighbors.push(bottom);
+  if (left) neighbors.push(left);
+
+  return neighbors;
+}
+
+function bfs(startCell, cells) {
+  for(let cell of cells) {
+    cell.distanceToStart = Infinity;
+    cell.isExit = false;
+  }
+
+  const queue = [startCell];
+  const localVisited = new Set();
+  localVisited.add(startCell);
+
+  var distanceToStart = 0;
+  startCell.distanceToStart = distanceToStart;
+
+  var currentCell = null;
+  while(queue.length > 0) {
+    currentCell = queue.shift();
+
+    for(let neighbor of findNeighborsBFS(currentCell, cells)) {
+      if(!localVisited.has(neighbor)) {
+        localVisited.add(neighbor);
+        queue.push(neighbor);
+
+        neighbor.distanceToStart = currentCell.distanceToStart + 1;
+      }
+    }
+  }
+}
+
+function findLongestPath(cells) {
+  let maxDistance = -1;
+  let exitCell = null;
+
+  for(let cell of cells) {
+    if(cell.distanceToStart !== Infinity)
+      if(cell.distanceToStart > maxDistance) {
+        maxDistance = cell.distanceToStart;
+        exitCell = cell;
+      }
+  }
+
+  return exitCell;
+}
+
 function Cell(i, j, size, cols, rows) {
   this.i = i;
   this.j = j;
@@ -39,6 +98,8 @@ function Cell(i, j, size, cols, rows) {
   this.rows = rows;
   this.walls = [true, true, true, true]; // top, right, bottom, left
   this.visited = false;
+  this.distanceToStart = Infinity;
+  this.isExit = false;
 
   this.draw = function (ctx) {
     ctx.strokeStyle = "#ffffff";
@@ -64,6 +125,11 @@ function Cell(i, j, size, cols, rows) {
 
     if (this.visited) {
       ctx.fillStyle = "rgba(1, 113, 227, 0.5)";
+      ctx.fillRect(this.x, this.y, this.size, this.size);
+    }
+
+    if(this.isExit) {
+      ctx.fillStyle = "rgba(255, 165, 0, 0.9)";
       ctx.fillRect(this.x, this.y, this.size, this.size);
     }
   };
@@ -97,22 +163,23 @@ const Maze = () => {
   const cells = useRef([]);
   const stack = useRef([]);
   const currentCell = useRef(null);
+  const exitCell = useRef(null);
   const animationFrameId = useRef(null);
   const ctxRef = useRef(null);
 
   const dimsRef = useRef({
-    width: 400,
-    height: 400,
-    cellSize: 40,
+    width: 500,
+    height: 500,
+    cellSize: 50,
     cols: 10,
     rows: 10,
   });
 
-  const updateInterval = 50;
+  const updateInterval = 30;
   const lastUpdateTime = useRef(0);
 
-  const numCols = 15;
-  const numRows = 15;
+  const numCols = 10;
+  const numRows = 10;
 
   const drawLoop = useCallback(() => {
     animationFrameId.current = requestAnimationFrame(drawLoop);
@@ -155,6 +222,17 @@ const Maze = () => {
       } else if (localStack.length > 0) {
         localCurrent = localStack.pop();
       } else {
+        bfs(localCells[0], localCells);
+        exitCell.current = findLongestPath(localCells);
+
+        if (exitCell.current) {
+          exitCell.current.isExit = true;
+
+          console.log("Exit cell", exitCell.current);
+
+          exitCell.current.draw(ctx);
+        }
+
         if (animationFrameId.current) {
           cancelAnimationFrame(animationFrameId.current);
         }
@@ -168,33 +246,8 @@ const Maze = () => {
     animationFrameId.current = requestAnimationFrame(drawLoop);
   }, [updateInterval]);
 
-  const generate = useCallback(() => {
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-    }
-
-    const canvas = canvasRef.current;
-    const ctx = ctxRef.current;
-
-    const container = containerRef.current;
-    if (!container) return;
-
-    const containerWidth = container.clientWidth;
-
-    const newCellSize = Math.floor((containerWidth - 2) / numCols);
-    const newWidth = newCellSize * numCols;
-    const newHeight = newCellSize * numRows;
-
-    canvas.width = newWidth;
-    canvas.height = newHeight;
-
-    dimsRef.current = {
-      width: newWidth,
-      height: newHeight,
-      cellSize: newCellSize,
-      cols: numCols,
-      rows: numRows,
-    };
+  const generate = useCallback((newCellSize) => {
+    if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
 
     cells.current = [];
     stack.current = [];
@@ -211,34 +264,79 @@ const Maze = () => {
     stack.current.push(currentCell.current);
 
     lastUpdateTime.current = performance.now();
-
     animationFrameId.current = requestAnimationFrame(drawLoop);
-
   }, [drawLoop]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    ctxRef.current = ctx;
 
-    const { width, height } = dimsRef.current;
-    canvas.width = width;
-    canvas.height = height;
-    ctx.fillStyle = "#c6c6c6";
-    ctx.fillRect(0, 0, width, height);
+  useEffect(() => {
+    const canvasResizing = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+      ctxRef.current = ctx;
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const availableWidth = Math.max(100, containerRect.width); // ancho disponible en CSS px
+
+      const containerHeight = containerRect.height;
+      const viewportHeight = window.innerHeight;
+      const availableHeight = containerHeight > 0 ? containerHeight : Math.floor(viewportHeight * 0.65);
+
+      const maxCellSize = 45;
+      const minCellSize = 10;
+      const padding = 2;
+
+      const sizeFromWidth = Math.floor((availableWidth - padding) / numCols);
+      const sizeFromHeight = Math.floor((availableHeight - padding) / numRows);
+      let newCellSize = Math.min(maxCellSize, sizeFromWidth, sizeFromHeight);
+      newCellSize = Math.max(minCellSize, newCellSize);
+
+      const newWidth = newCellSize * numCols;
+      const newHeight = newCellSize * numRows;
+
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(newWidth * ratio));
+      canvas.height = Math.max(1, Math.floor(newHeight * ratio));
+
+      canvas.style.width = `${newWidth}px`;
+      canvas.style.height = `${newHeight}px`;
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      dimsRef.current = {
+        width: newWidth,
+        height: newHeight,
+        cellSize: newCellSize,
+        cols: numCols,
+        rows: numRows,
+      };
+
+      ctx.fillStyle = "#c6c6c6";
+      ctx.fillRect(0, 0, dimsRef.current.width, dimsRef.current.height);
+    };
+
+    window.addEventListener("resize", canvasResizing);
+    canvasResizing();
 
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
+
+      window.removeEventListener("resize", canvasResizing);
     };
   }, []);
+
 
   return (
     <div className="maze-container" ref={containerRef}>
       <h2>Voice controlled Maze!</h2>
       <canvas ref={canvasRef}></canvas>
-      <button onClick={generate}>Generate</button>
+      <button onClick={() => generate(dimsRef.current.cellSize)}>Generate</button>
     </div>
   );
 };
