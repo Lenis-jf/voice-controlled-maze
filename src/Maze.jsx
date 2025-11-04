@@ -228,7 +228,7 @@ const Maze = () => {
         if (exitCell.current) {
           exitCell.current.isExit = true;
 
-          console.log("Exit cell", exitCell.current);
+          // console.log("Exit cell", exitCell.current);
 
           exitCell.current.draw(ctx);
         }
