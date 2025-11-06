@@ -1,4 +1,7 @@
 import React, { useEffect, useRef, useCallback } from "react";
+import Player from "./Player";
+
+const baseUrl = import.meta.env.VITE_PUBLIC_URL || ""; 
 
 function index(i, j, cols, rows) {
   if (i < 0 || j < 0 || i >= cols || j >= rows) {
@@ -32,7 +35,7 @@ function findNeighborsBFS(cell, cells) {
   const localCells = cells;
   const neighbors = [];
 
-  const top = cell.walls[0] ? null : localCells[index(cell.i, cell.j -1, cell.cols, cell.rows)];
+  const top = cell.walls[0] ? null : localCells[index(cell.i, cell.j - 1, cell.cols, cell.rows)];
   const right = cell.walls[1] ? null : localCells[index(cell.i + 1, cell.j, cell.cols, cell.rows)];
   const bottom = cell.walls[2] ? null : localCells[index(cell.i, cell.j + 1, cell.cols, cell.rows)];
   const left = cell.walls[3] ? null : localCells[index(cell.i - 1, cell.j, cell.cols, cell.rows)];
@@ -46,7 +49,7 @@ function findNeighborsBFS(cell, cells) {
 }
 
 function bfs(startCell, cells) {
-  for(let cell of cells) {
+  for (let cell of cells) {
     cell.distanceToStart = Infinity;
     cell.isExit = false;
   }
@@ -59,11 +62,11 @@ function bfs(startCell, cells) {
   startCell.distanceToStart = distanceToStart;
 
   var currentCell = null;
-  while(queue.length > 0) {
+  while (queue.length > 0) {
     currentCell = queue.shift();
 
-    for(let neighbor of findNeighborsBFS(currentCell, cells)) {
-      if(!localVisited.has(neighbor)) {
+    for (let neighbor of findNeighborsBFS(currentCell, cells)) {
+      if (!localVisited.has(neighbor)) {
         localVisited.add(neighbor);
         queue.push(neighbor);
 
@@ -77,9 +80,9 @@ function findLongestPath(cells) {
   let maxDistance = -1;
   let exitCell = null;
 
-  for(let cell of cells) {
-    if(cell.distanceToStart !== Infinity)
-      if(cell.distanceToStart > maxDistance) {
+  for (let cell of cells) {
+    if (cell.distanceToStart !== Infinity)
+      if (cell.distanceToStart > maxDistance) {
         maxDistance = cell.distanceToStart;
         exitCell = cell;
       }
@@ -128,9 +131,15 @@ function Cell(i, j, size, cols, rows) {
       ctx.fillRect(this.x, this.y, this.size, this.size);
     }
 
-    if(this.isExit) {
+    if (this.isExit) {
       ctx.fillStyle = "rgba(255, 165, 0, 0.9)";
-      ctx.fillRect(this.x, this.y, this.size, this.size);
+
+      if (ctx.roundRect) {
+        ctx.roundRect(this.x + 5, this.y + 5, this.size - 10, this.size - 10, 8);
+        ctx.fill();
+      } else {
+        ctx.fillRect(this.x + 5, this.y + 5, this.size - 10, this.size - 10);
+      }
     }
   };
 
@@ -163,8 +172,10 @@ const Maze = () => {
   const cells = useRef([]);
   const stack = useRef([]);
   const currentCell = useRef(null);
+  const playerCellRef = useRef(null);
   const exitCell = useRef(null);
-  const animationFrameId = useRef(null);
+  const mazeAnimationFrameId = useRef(null);
+  const playerAnimationFrameId = useRef(null);
   const ctxRef = useRef(null);
 
   const dimsRef = useRef({
@@ -172,17 +183,19 @@ const Maze = () => {
     height: 500,
     cellSize: 50,
     cols: 10,
-    rows: 10,
+    rows: 15,
   });
 
-  const updateInterval = 30;
+  const updateInterval = 10;
   const lastUpdateTime = useRef(0);
 
-  const numCols = 10;
+  const numCols = 15;
   const numRows = 10;
 
-  const drawLoop = useCallback(() => {
-    animationFrameId.current = requestAnimationFrame(drawLoop);
+  const playerRef = useRef(null);
+
+  const drawMazeLoop = useCallback(() => {
+    mazeAnimationFrameId.current = requestAnimationFrame(drawMazeLoop);
 
     const now = performance.now();
     const delta = now - lastUpdateTime.current;
@@ -203,7 +216,13 @@ const Maze = () => {
 
     if (localCurrent) {
       ctx.fillStyle = "rgb(1, 113, 227)";
-      ctx.fillRect(localCurrent.x, localCurrent.y, cellSize, cellSize);
+
+      if (ctx.roundRect) {
+        ctx.roundRect(localCurrent.x + 5, localCurrent.y + 5, cellSize - 10, cellSize - 10, 8);
+        ctx.fill();
+      } else {
+        ctx.fillRect(localCurrent.x + 5, localCurrent.y + 5, cellSize - 10, cellSize - 10);
+      }
     }
 
     if (delta < updateInterval) {
@@ -233,21 +252,23 @@ const Maze = () => {
           exitCell.current.draw(ctx);
         }
 
-        if (animationFrameId.current) {
-          cancelAnimationFrame(animationFrameId.current);
+        if (mazeAnimationFrameId.current) {
+          cancelAnimationFrame(mazeAnimationFrameId.current);
         }
         currentCell.current = localCurrent;
+
+        generatePlayer();
         return;
       }
     }
 
     currentCell.current = localCurrent;
 
-    animationFrameId.current = requestAnimationFrame(drawLoop);
+    // mazeAnimationFrameId.current = requestAnimationFrame(drawMazeLoop);
   }, [updateInterval]);
 
-  const generate = useCallback((newCellSize) => {
-    if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+  const generateMaze = useCallback((newCellSize) => {
+    if (mazeAnimationFrameId.current) cancelAnimationFrame(mazeAnimationFrameId.current);
 
     cells.current = [];
     stack.current = [];
@@ -264,9 +285,135 @@ const Maze = () => {
     stack.current.push(currentCell.current);
 
     lastUpdateTime.current = performance.now();
-    animationFrameId.current = requestAnimationFrame(drawLoop);
-  }, [drawLoop]);
+    mazeAnimationFrameId.current = requestAnimationFrame(drawMazeLoop);
+  }, [drawMazeLoop]);
 
+  const playerdrawMazeLoop = useCallback(() => {
+    playerAnimationFrameId.current = requestAnimationFrame(playerdrawMazeLoop);
+
+    const ctx = ctxRef.current;
+    const { width, height } = dimsRef.current;
+
+    ctx.fillStyle = "#c6c6c6";
+    ctx.fillRect(0, 0, width, height);
+
+    for (let cell of cells.current) {
+      cell.draw(ctx);
+    }
+
+    if (!playerdrawMazeLoop._last) playerdrawMazeLoop._last = performance.now();
+
+    const now = performance.now();
+
+    let delta = now - playerdrawMazeLoop._last;
+    if (delta > 100) delta = 100; // avoid large jumps
+
+    playerdrawMazeLoop._last = now;
+
+    const player = playerRef.current;
+
+    if (player) {
+      if (player.update) player.update(delta);
+      if (player.draw) player.draw(ctx);
+    }
+  }, []);
+
+  const generatePlayer = useCallback(() => {
+    if (playerAnimationFrameId.current) cancelAnimationFrame(playerAnimationFrameId.current);
+
+    const startCell = cells?.current[0];
+    if (!startCell) return;
+
+    playerRef.current = new Player(startCell, dimsRef.current.cellSize, { emoji: "🚀" });
+
+    playerCellRef.current = startCell;
+
+    playerdrawMazeLoop._last = performance.now();
+    playerAnimationFrameId.current = requestAnimationFrame(playerdrawMazeLoop);
+  }, [playerdrawMazeLoop]);
+
+  const redrawAll = useCallback(() => {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+
+    const { width, height, cellSize } = dimsRef.current;
+
+
+    ctx.fillStyle = "#c6c6c6";
+    ctx.fillRect(0, 0, width, height);
+
+
+    for (let cell of cells.current) {
+      cell.size = cellSize;
+      cell.x = cell.i * cellSize;
+      cell.y = cell.j * cellSize;
+      cell.draw(ctx);
+    }
+
+    if (currentCell.current) {
+      ctx.fillStyle = "rgb(1, 113, 227)";
+      if (ctx.roundRect) {
+        ctx.roundRect(
+          currentCell.current.x + 5,
+          currentCell.current.y + 5,
+          cellSize - 10,
+          cellSize - 10,
+          8
+        );
+        ctx.fill();
+      } else {
+        ctx.fillRect(
+          currentCell.current.x + 5,
+          currentCell.current.y + 5,
+          cellSize - 10,
+          cellSize - 10
+        );
+      }
+    }
+
+    if (playerRef.current && playerCellRef.current) {
+      playerRef.current.cellSize = cellSize;
+      playerRef.current.setPositionFromCell(playerCellRef.current);
+      playerRef.current.draw(ctx);
+    }
+  }, []);
+
+  function movePlayerBy(deltaX, deltaY) {
+    const player = playerRef.current;
+    const playerCell = playerCellRef.current;
+
+    if (!player || !playerCell) return;
+
+    const nextIndexI = playerCell.i + deltaX;
+    const nextIndexJ = playerCell.j + deltaY;
+    const nextCellIndex = index(nextIndexI, nextIndexJ, dimsRef.current.cols, dimsRef.current.rows);
+
+    if (nextCellIndex === -1) {
+      player.triggerBounce({ x: deltaX, y: deltaY });
+      return;
+    }
+
+    const nextCell = cells.current[nextCellIndex];
+
+    let wallBlocking = false;
+
+    if (deltaX === 1 && playerCell.walls[1]) wallBlocking = true;
+    if (deltaX === -1 && playerCell.walls[3]) wallBlocking = true;
+    if (deltaY === 1 && playerCell.walls[2]) wallBlocking = true;
+    if (deltaY === -1 && playerCell.walls[0]) wallBlocking = true;
+
+    if (wallBlocking) {
+      player.triggerBounce({ x: deltaX, y: deltaY });
+      return;
+    }
+
+    player.moveTo(nextCell);
+    playerCellRef.current = nextCell;
+
+    if (nextCell.isExit) {
+      console.log("Player reached the exit!");
+    }
+  }
 
   useEffect(() => {
     const canvasResizing = () => {
@@ -315,28 +462,94 @@ const Maze = () => {
         rows: numRows,
       };
 
+      redrawAll();
+
       ctx.fillStyle = "#c6c6c6";
       ctx.fillRect(0, 0, dimsRef.current.width, dimsRef.current.height);
+
+      ctx.fillStyle = "#000000";
     };
 
     window.addEventListener("resize", canvasResizing);
     canvasResizing();
 
     return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
+      if (mazeAnimationFrameId.current) {
+        cancelAnimationFrame(mazeAnimationFrameId.current);
       }
 
       window.removeEventListener("resize", canvasResizing);
     };
   }, []);
 
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (!playerRef.current) return;
+
+      const pressedKey = e.key;
+
+      switch (pressedKey) {
+        case "ArrowUp":
+        case "w":
+          movePlayerBy(0, -1);
+          break;
+        case "ArrowDown":
+        case "s":
+          movePlayerBy(0, 1);
+          break;
+        case "ArrowLeft":
+        case "a":
+          movePlayerBy(-1, 0);
+          break;
+        case "ArrowRight":
+        case "d":
+          movePlayerBy(1, 0);
+          break;
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <div className="maze-container" ref={containerRef}>
       <h2>Voice controlled Maze!</h2>
       <canvas ref={canvasRef}></canvas>
-      <button onClick={() => generate(dimsRef.current.cellSize)}>Generate</button>
+      <button onClick={() => generateMaze(dimsRef.current.cellSize)}>generateMaze</button>
+
+      <div className="maze-controls">
+        <button
+          className="control-button up"
+          onClick={() => movePlayerBy(0, -1)}
+          aria-label="Move Up"
+        >
+          <img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Up" />
+        </button>
+        <button
+          className="control-button left"
+          onClick={() => movePlayerBy(-1, 0)}
+          aria-label="Move Left"
+        >
+          <img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Left" />
+        </button>
+        <button
+          className="control-button right"
+          onClick={() => movePlayerBy(1, 0)}
+          aria-label="Move Right"
+        >
+          <img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Right" />
+        </button>
+        <button
+          className="control-button down"
+          onClick={() => movePlayerBy(0, 1)}
+          aria-label="Move Down"
+        >
+          <img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Down" />
+        </button>
+      </div>
+
     </div>
   );
 };
