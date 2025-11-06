@@ -8,12 +8,27 @@
 
 html { font-size: 62.5%; }
 
+body {
+  background-image: url("/public/assets/imgs/buildigs-bg.png");
+  background-size: auto;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: repeat;
+  background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.3)
+    ),
+    url("/assets/imgs/buildigs-bg.png");
+}
+
 .maze-container {
   position: relative;
-  width: 90%;
+  width: 100%;
   height: 100vh;
   max-height: 100vh;
   margin: 0 auto;
+  backdrop-filter: blur(3px);
 
   display: flex;
   flex-direction: column;
@@ -41,6 +56,7 @@ html { font-size: 62.5%; }
     background-color: $main-active-color;
     color: white;
     transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+    user-select: none;
 
     &:hover {
       background-color: rgba($main-active-color, 0.8);
@@ -57,8 +73,8 @@ html { font-size: 62.5%; }
 
   .maze-controls {
     position: absolute;
-    bottom: clamp(5rem, calc(7rem + 5vh), 22rem);
-    right: clamp(0.8rem, calc(1rem + 0.5vw), 1.5rem);
+    bottom: clamp(5.2rem, calc(4rem + 5.2vh), 15rem);
+    right: 0;
     z-index: 100;
 
     width: 130px; 
@@ -70,7 +86,7 @@ html { font-size: 62.5%; }
       ".    up    ."
       "left  .  right"
       ".   down   .";
-    gap: 5px;
+    gap: 0px;
 
     display: none;
 
@@ -92,6 +108,7 @@ html { font-size: 62.5%; }
       display: flex;
       justify-content: center;
       align-items: center;
+      user-select: none;
 
       transition: all 0.2s ease-in-out;
 

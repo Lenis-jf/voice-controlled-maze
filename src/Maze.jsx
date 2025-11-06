@@ -102,6 +102,7 @@ function Cell(i, j, size, cols, rows) {
   this.walls = [true, true, true, true]; // top, right, bottom, left
   this.visited = false;
   this.distanceToStart = Infinity;
+  this.distanceToStart = false;
   this.isExit = false;
 
   this.draw = function (ctx) {
@@ -131,14 +132,25 @@ function Cell(i, j, size, cols, rows) {
       ctx.fillRect(this.x, this.y, this.size, this.size);
     }
 
+    if(this.isStart) {
+      ctx.fillStyle = "rgb(1, 113, 227)";
+
+      if (ctx.roundRect) {
+        ctx.roundRect(this.x + 2.5, this.y + 2.5, this.size - 5, this.size - 5, 4);
+        ctx.fill();
+      } else {
+        ctx.fillRect(this.x + 2.5, this.y + 2.5, this.size - 5, this.size - 5);
+      }
+    }
+
     if (this.isExit) {
       ctx.fillStyle = "rgba(255, 165, 0, 0.9)";
 
       if (ctx.roundRect) {
-        ctx.roundRect(this.x + 5, this.y + 5, this.size - 10, this.size - 10, 8);
+        ctx.roundRect(this.x + 2.5, this.y + 2.5, this.size - 5, this.size - 5, 4);
         ctx.fill();
       } else {
-        ctx.fillRect(this.x + 5, this.y + 5, this.size - 10, this.size - 10);
+        ctx.fillRect(this.x + 2.5, this.y + 2.5, this.size - 5, this.size - 5);
       }
     }
   };
@@ -218,10 +230,10 @@ const Maze = () => {
       ctx.fillStyle = "rgb(1, 113, 227)";
 
       if (ctx.roundRect) {
-        ctx.roundRect(localCurrent.x + 5, localCurrent.y + 5, cellSize - 10, cellSize - 10, 8);
+        ctx.roundRect(localCurrent.x + 2.5, localCurrent.y + 2.5, localCurrent.size - 5, localCurrent.size - 5, 4);
         ctx.fill();
       } else {
-        ctx.fillRect(localCurrent.x + 5, localCurrent.y + 5, cellSize - 10, cellSize - 10);
+        ctx.fillRect(localCurrent.x + 2.5, localCurrent.y + 2.5, localCurrent.size - 5, localCurrent.size - 5);
       }
     }
 
@@ -323,6 +335,8 @@ const Maze = () => {
 
     const startCell = cells?.current[0];
     if (!startCell) return;
+
+    startCell.isStart = true;
 
     playerRef.current = new Player(startCell, dimsRef.current.cellSize, { emoji: "🚀" });
 
