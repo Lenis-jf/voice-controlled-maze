@@ -517,7 +517,7 @@ const Maze = () => {
     <div className="maze-container" ref={containerRef}>
       <h2>Voice controlled Maze!</h2>
       <canvas ref={canvasRef}></canvas>
-      <button onClick={() => generateMaze(dimsRef.current.cellSize)}>generateMaze</button>
+      <button onClick={() => generateMaze(dimsRef.current.cellSize)}>Generate Maze</button>
 
       <div className="maze-controls">
         <button
