@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Maze from './Maze.jsx'
+import Maze from './components/Maze'
 import "./styles/main.scss";
 
 function App() {
