@@ -15,7 +15,7 @@ export function interpretVoiceCommand(word = "") {
 const NUM_WORDS = {
     uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10,
     one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-    eins: 1, zwei: 2, drei: 3, vier: 4, fünf: 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10
+    einmal: 1, zweimal: 2, dreimal: 3, viermal: 4, fünfmal: 5, sechsmal: 6, siebenmal: 7, achtmal: 8, neunmal: 9, zehnmal: 10
 };
 
 function parseNumberToken(token) {
@@ -36,7 +36,7 @@ export function interpretSequence(transcript = "") {
 
     for (const part of parts) {
         // buscar número explícito
-        const numMatch = part.match(/\b(\d+|uno|dos|tres|cuatro|cinco|one|two|three|four|five|eins|zwei|drei|vier|fünf)\b/);
+        const numMatch = part.match(/\b(\d+|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|one|two|three|four|five|six|seven|eight|nine|ten|einmal|zweimal|dreimal|viermal|fünfmal|sechsmal|siebenmal|achtmal|neunmal|zehnmal)\b/);
         let repeat = 1;
         if (numMatch) repeat = parseNumberToken(numMatch[1]) || 1;
 

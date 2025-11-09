@@ -198,7 +198,6 @@ const Maze = () => {
   const containerRef = useRef(null);
   const popupRef = useRef(null);
 
-  const voiceControlRef = useRef(null);
   const listeningPopupRef = useRef(null);
   const [currentLang, setCurrentLanguage] = useState("en-US");
   
@@ -637,35 +636,44 @@ const Maze = () => {
       const one = interpretVoiceCommand(recognized);
       if (one) commands.push(one);
     }
-    if (commands.length > 0) enqueueCommands(commands);
+    if (commands.length > 0) {
+      enqueueCommands(commands);
+      processQueue();
+    }
   };
 
   function enqueueCommands(commands = []) {
     if (!Array.isArray(commands)) commands = [commands];
     commandQueueRef.current.push(...commands);
 
-    processQueue();
+    // processQueue();
   }
 
   function processQueue() {
-    if (processingQueueRef.current) return;
+    if(processingQueueRef.current) return;
+    if(commandQueueRef.current.length === 0) return;
     processingQueueRef.current = true;
 
-    const next = () => {
-      const cmd = commandQueueRef.current.shift();
-      if (!cmd) {
-        processingQueueRef.current = false;
-        return;
-      }
+    const firstCmd = commandQueueRef.current.shift();
+    executeCommand(firstCmd);
 
-      executeCommand(cmd);
+    if(commandQueueRef.current.length > 0) {      
+      const next = () => {
+        const cmd = commandQueueRef.current.shift();
+        if (!cmd) {
+          processingQueueRef.current = false;
+          return;
+        }
 
-      requestAnimationFrame(() => {
-        next();
-      });
-    };
+        executeCommand(cmd);
 
-    next();
+        requestAnimationFrame(next);
+      };
+
+      requestAnimationFrame(next);
+    } else {
+      processingQueueRef.current = false;
+    }
   }
 
   function executeCommand(command) {
@@ -696,23 +704,23 @@ const Maze = () => {
     }
   }
 
-  voiceControlRef.current = useVoiceControl({ onResult: handleVoiceCommand, lang: currentLang || "en-US" });
+  const voiceControl = useVoiceControl({ onResult: handleVoiceCommand, lang: currentLang || "en-US" });
 
   useEffect(() => {
-    if (!voiceControlRef.current?.isListening) {
+    if (!voiceControl.isListening) {
       setDots("");
       return;
     }
     const id = setInterval(() => setDots(prev => (prev.length < 3 ? prev + "." : "")), 800);
     return () => clearInterval(id);
-  }, [voiceControlRef.current?.isListening]);
+  }, [voiceControl.isListening]);
 
   useEffect(() => {
     if(!hasWon) return;
 
     const popup = popupRef.current;
 
-    if(voiceControlRef.current?.isListening) {
+    if(voiceControl.isListening) {
       voiceControlRef.current.stop();
     }
 
@@ -727,7 +735,19 @@ const Maze = () => {
     confettiRef.current?.start(3500, { initialCount: 140, streamInterval: 220 });
 
     setHasWon(false);
-  }, [hasWon, voiceControlRef.current]);
+  }, [hasWon, voiceControl]);
+
+  useEffect(() => {
+    let timeoutId;
+
+    if(!voiceControl.isListening) {
+      timeoutId = setTimeout(() => {
+        setTranscript("");
+      }, 300);
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [voiceControl.isListening]);
 
   return (
     <div className="maze-container" ref={containerRef}>
@@ -739,10 +759,10 @@ const Maze = () => {
         };
 
         setCurrentLanguage(lang);
-        console.log("Language changed to:", lang);
+        // console.log("Language changed to:", lang);
 
-        if(voiceControlRef.current?.isListening) {
-          voiceControlRef.current.stop();
+        if(voiceControl.isListening) {
+          voiceControl.stop();
         }
       }} />
       <div className="win-popup-container hidden" ref={popupRef}>
@@ -753,7 +773,7 @@ const Maze = () => {
           <button onClick={() => { resetGame(dimsRef.current.cellSize) }}>Play Again</button>
         </div>
       </div>
-      <div className={`listening-popup ${voiceControlRef.current?.isListening ? "visible" : "hidden"}`} ref={listeningPopupRef}>
+      <div className={`listening-popup ${voiceControl.isListening ? "visible" : "hidden"}`} ref={listeningPopupRef}>
         <h3>{`Listening${dots}`}</h3>
         <img src={`${baseUrl}assets/icons/listening.svg`} alt="listening icon" />
         <p>Recognized command: {transcript}</p>
@@ -770,17 +790,17 @@ const Maze = () => {
         </button>
         <button
           type="button"
-          className={`mic-button ${voiceControlRef.current?.isListening ? "active" : ""}`}
-          aria-pressed={voiceControlRef.current?.isListening}
+          className={`mic-button ${voiceControl.isListening ? "active" : ""}`}
+          aria-pressed={voiceControl.isListening}
           onClick={() => {
-            voiceControlRef.current?.toggle?.();
+            voiceControl.toggle?.();
           }}
-          disabled={!voiceControlRef.current.isSupported || isManualControls || !isGenerated}
+          disabled={!voiceControl.isSupported || isManualControls || !isGenerated}
         >
           <img
-            src={`${voiceControlRef.current?.isListening ? `${baseUrl}assets/icons/mic-on.svg` : `${baseUrl}assets/icons/mic-off.svg`}`}
+            src={`${voiceControl.isListening ? `${baseUrl}assets/icons/mic-on.svg` : `${baseUrl}assets/icons/mic-off.svg`}`}
             alt="active voice control icon" />
-          <span>{voiceControlRef.current?.isListening ? "Stop Listening" : "Start Listening"}</span>
+          <span>{voiceControl.isListening ? "Stop Listening" : "Start Listening"}</span>
         </button>
       </div>
 
