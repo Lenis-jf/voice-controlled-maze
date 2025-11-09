@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useCallback, useState } from "react";
 
 import Confetti from "./Confetti";
 import Player from "./Player";
+import LanguageSelector from "./LanguageSelector";
 
 import useVoiceControl from "../hooks/useVoiceControl";
-import { interpretVoiceCommand } from "../utils/voiceCommandsMap";
+import { interpretVoiceCommand, interpretSequence } from "../utils/voiceCommandsMap";
 
 const baseUrl = import.meta.env.VITE_PUBLIC_URL || "";
 
@@ -193,11 +194,22 @@ function handleClosePopup() {
 
 const Maze = () => {
   const canvasRef = useRef(null);
+  const offscreenCanvasRef = useRef(null);
   const containerRef = useRef(null);
   const popupRef = useRef(null);
 
+  const voiceControlRef = useRef(null);
+  const listeningPopupRef = useRef(null);
+  const [currentLang, setCurrentLanguage] = useState("en-US");
+  
+  const [transcript, setTranscript] = useState("");
+  const [dots, setDots] = useState("");
+
+  const commandQueueRef = useRef([]);
+  const processingQueueRef = useRef(false);
+
   const [isGenerated, setIsGenerated] = useState(false);
-  const winRef = useRef(false);
+  const [hasWon, setHasWon] = useState(false);
   const confettiRef = useRef(null);
 
   const cells = useRef([]);
@@ -280,8 +292,17 @@ const Maze = () => {
 
         if (exitCell.current) {
           exitCell.current.isExit = true;
-          exitCell.current.draw(ctx);
         }
+
+        if (localCells[0]) {
+          localCells[0].isStart = true;
+        }
+
+        if (!offscreenCanvasRef.current) offscreenCanvasRef.current = document.createElement("canvas");
+
+        drawMazeToOffscreen(dimsRef.current.cellSize, numCols, numRows, localCells);
+
+        redrawAll();
 
         if (mazeAnimationFrameId.current) {
           cancelAnimationFrame(mazeAnimationFrameId.current);
@@ -314,6 +335,8 @@ const Maze = () => {
     currentCell.current.visited = true;
     stack.current.push(currentCell.current);
 
+    redrawAll();
+
     lastUpdateTime.current = performance.now();
     mazeAnimationFrameId.current = requestAnimationFrame(drawMazeLoop);
   }, [drawMazeLoop]);
@@ -333,14 +356,8 @@ const Maze = () => {
     playerAnimationFrameId.current = requestAnimationFrame(playerdrawMazeLoop);
 
     const ctx = ctxRef.current;
-    const { width, height } = dimsRef.current;
 
-    ctx.fillStyle = "#c6c6c6";
-    ctx.fillRect(0, 0, width, height);
-
-    for (let cell of cells.current) {
-      cell.draw(ctx);
-    }
+    redrawAll()
 
     if (!playerdrawMazeLoop._last) playerdrawMazeLoop._last = performance.now();
 
@@ -357,20 +374,20 @@ const Maze = () => {
       if (player.update) player.update(delta);
       if (player.draw) player.draw(ctx);
 
-      if ((winRef.current == true) && popupRef.current) {
+      if (hasWon && popupRef.current) {
         const finished = (typeof player.progress !== "undefined" ? player.progress >= 1 : true);
         const notBouncing = (typeof player.bouncing !== "undefined" ? !player.bouncing : true);
 
         if (finished && notBouncing) {
-          const popup = popupRef.current;
-          if (popup) {
-            popup.classList.remove("hidden");
-            popup.classList.add("visible");
-          }
+          // const popup = popupRef.current;
+          // if (popup) {
+          //   popup.classList.remove("hidden");
+          //   popup.classList.add("visible");
+          // }
 
-          confettiRef.current?.start(3500, { initialCount: 140, streamInterval: 220 });
+          // confettiRef.current?.start(3500, { initialCount: 140, streamInterval: 220 });
 
-          winRef.current = false;
+          // setHasWon(false);
 
           if (playerAnimationFrameId.current) {
             cancelAnimationFrame(playerAnimationFrameId.current);
@@ -399,46 +416,12 @@ const Maze = () => {
   const redrawAll = useCallback(() => {
     const ctx = ctxRef.current;
     if (!ctx) return;
-
     const { width, height, cellSize } = dimsRef.current;
 
+    ctx.clearRect(0, 0, width, height);
 
-    ctx.fillStyle = "#c6c6c6";
-    ctx.fillRect(0, 0, width, height);
-
-
-    for (let cell of cells.current) {
-      cell.size = cellSize;
-      cell.x = cell.i * cellSize;
-      cell.y = cell.j * cellSize;
-      cell.draw(ctx);
-    }
-
-    if (currentCell.current) {
-      ctx.fillStyle = "rgb(1, 113, 227)";
-      if (ctx.roundRect) {
-        ctx.roundRect(
-          currentCell.current.x + 5,
-          currentCell.current.y + 5,
-          cellSize - 10,
-          cellSize - 10,
-          8
-        );
-        ctx.fill();
-      } else {
-        ctx.fillRect(
-          currentCell.current.x + 5,
-          currentCell.current.y + 5,
-          cellSize - 10,
-          cellSize - 10
-        );
-      }
-    }
-
-    if (playerRef.current && playerCellRef.current) {
-      playerRef.current.cellSize = cellSize;
-      playerRef.current.setPositionFromCell(playerCellRef.current);
-      playerRef.current.draw(ctx);
+    if (offscreenCanvasRef.current) {
+      ctx.drawImage(offscreenCanvasRef.current, 0, 0, width, height);
     }
   }, []);
 
@@ -476,9 +459,65 @@ const Maze = () => {
 
     if (nextCell.isExit) {
       console.log("Player reached the exit!");
-      winRef.current = true;
+      setHasWon(true);
     }
   }
+
+  function drawMazeToOffscreen(cellSize, cols, rows, cellsArray) {
+    if (!offscreenCanvasRef.current || !canvasRef.current) return;
+
+    const ratio = window.devicePixelRatio || 1;
+    const w = cellSize * cols;
+    const h = cellSize * rows;
+
+    const off = offscreenCanvasRef.current;
+    off.width = Math.max(1, Math.floor(w * ratio));
+    off.height = Math.max(1, Math.floor(h * ratio));
+    off.style.width = `${w}px`;
+    off.style.height = `${h}px`;
+
+    const offCtx = off.getContext("2d");
+    offCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    // limpiar
+    offCtx.fillStyle = "#c6c6c6";
+    offCtx.fillRect(0, 0, w, h);
+
+    // dibujar cada celda usando la misma lógica que usas en Cell.draw
+    offCtx.strokeStyle = "#ffffff";
+    offCtx.lineWidth = 2;
+
+    for (const cell of cellsArray) {
+      const x = cell.i * cellSize;
+      const y = cell.j * cellSize;
+      const size = cellSize;
+
+      // walls
+      offCtx.beginPath();
+      if (cell.walls[0]) { offCtx.moveTo(x, y); offCtx.lineTo(x + size, y); }
+      if (cell.walls[1]) { offCtx.moveTo(x + size, y); offCtx.lineTo(x + size, y + size); }
+      if (cell.walls[2]) { offCtx.moveTo(x + size, y + size); offCtx.lineTo(x, y + size); }
+      if (cell.walls[3]) { offCtx.moveTo(x, y + size); offCtx.lineTo(x, y); }
+      offCtx.stroke();
+
+      // visited fill
+      if (cell.visited) {
+        offCtx.fillStyle = "rgba(1, 113, 227, 0.5)";
+        offCtx.fillRect(x, y, size, size);
+      }
+
+      // start/exit if needed
+      if (cell.isStart) {
+        offCtx.fillStyle = "rgb(1, 113, 227)";
+        offCtx.fillRect(x + 2.5, y + 2.5, size - 5, size - 5);
+      }
+      if (cell.isExit) {
+        offCtx.fillStyle = "rgba(255, 165, 0, 0.9)";
+        offCtx.fillRect(x + 2.5, y + 2.5, size - 5, size - 5);
+      }
+    }
+  }
+
 
   useEffect(() => {
     const canvasResizing = () => {
@@ -527,10 +566,12 @@ const Maze = () => {
         rows: numRows,
       };
 
-      redrawAll();
+      if (!offscreenCanvasRef.current) {
+        offscreenCanvasRef.current = document.createElement("canvas");
+      }
+      drawMazeToOffscreen(newCellSize, numCols, numRows, cells.current);
 
-      ctx.fillStyle = "#c6c6c6";
-      ctx.fillRect(0, 0, dimsRef.current.width, dimsRef.current.height);
+      redrawAll();
 
       if (confettiRef.current && typeof confettiRef.current.resize === "function") {
         try {
@@ -587,16 +628,48 @@ const Maze = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleVoiceCommand = ({ transcript, confidence }) => {
-    if(confidence && confidence < 0.5) return;
+  const handleVoiceCommand = ({ transcript: recognized, confidence }) => {
+    if (confidence && confidence < 0.5) return;
+    setTranscript(String(recognized || ""));
 
-    const command = interpretVoiceCommand(transcript);
+    const commands = interpretSequence(recognized);
+    if (commands.length === 0) {
+      const one = interpretVoiceCommand(recognized);
+      if (one) commands.push(one);
+    }
+    if (commands.length > 0) enqueueCommands(commands);
+  };
 
-    console.log("Interpreted command:", command);
+  function enqueueCommands(commands = []) {
+    if (!Array.isArray(commands)) commands = [commands];
+    commandQueueRef.current.push(...commands);
 
-    if(!command) return;
-  
-    switch(command) {
+    processQueue();
+  }
+
+  function processQueue() {
+    if (processingQueueRef.current) return;
+    processingQueueRef.current = true;
+
+    const next = () => {
+      const cmd = commandQueueRef.current.shift();
+      if (!cmd) {
+        processingQueueRef.current = false;
+        return;
+      }
+
+      executeCommand(cmd);
+
+      requestAnimationFrame(() => {
+        next();
+      });
+    };
+
+    next();
+  }
+
+  function executeCommand(command) {
+    switch (command) {
       case 'UP':
         movePlayerBy(0, -1);
         break;
@@ -609,33 +682,69 @@ const Maze = () => {
       case 'RIGHT':
         movePlayerBy(1, 0);
         break;
-      case "GENERATE":
-        generateMaze(dimsRef.current.cellSize);
+      case 'GENERATE':
+        resetGame(dimsRef.current.cellSize);
         break;
       case 'STOP':
-        setIsListening(false);
+        if (isListening) {
+          voiceControl?.stop?.();
+          // setIsListening(false);
+        }
+        break;
+      default:
         break;
     }
-  };
-
-  const voiceControl = useVoiceControl({ onResult: handleVoiceCommand });
-
-  const renderListeningText = (interval) => {
-    const [dots, setDots] = useState("");
-  
-    useEffect(() => {
-      const dotInterval = setInterval(() => {
-        setDots((prev) => (prev.length < 3 ? prev + "." : ""));
-      }, interval);
-  
-      return () => clearInterval(dotInterval);
-    }, [isListening, interval]);
-  
-    return dots;
   }
+
+  voiceControlRef.current = useVoiceControl({ onResult: handleVoiceCommand, lang: currentLang || "en-US" });
+
+  useEffect(() => {
+    if (!voiceControlRef.current?.isListening) {
+      setDots("");
+      return;
+    }
+    const id = setInterval(() => setDots(prev => (prev.length < 3 ? prev + "." : "")), 800);
+    return () => clearInterval(id);
+  }, [voiceControlRef.current?.isListening]);
+
+  useEffect(() => {
+    if(!hasWon) return;
+
+    const popup = popupRef.current;
+
+    if(voiceControlRef.current?.isListening) {
+      voiceControlRef.current.stop();
+    }
+
+    listeningPopupRef.current?.classList.remove("visible");
+    listeningPopupRef.current?.classList.add("hidden");
+
+    if (popup) {
+      popup.classList.remove("hidden");
+      popup.classList.add("visible");
+    }
+
+    confettiRef.current?.start(3500, { initialCount: 140, streamInterval: 220 });
+
+    setHasWon(false);
+  }, [hasWon, voiceControlRef.current]);
 
   return (
     <div className="maze-container" ref={containerRef}>
+      <LanguageSelector currentLanguage={currentLang.split("-")[0]} onLanguageChange={(lang) => {
+        const languageMap = {
+          'es': 'es-CO',
+          'en': 'en-US',
+          'de': 'de-DE',
+        };
+
+        setCurrentLanguage(lang);
+        console.log("Language changed to:", lang);
+
+        if(voiceControlRef.current?.isListening) {
+          voiceControlRef.current.stop();
+        }
+      }} />
       <div className="win-popup-container hidden" ref={popupRef}>
         <div className="win-popup">
           <img className="close" src={`${baseUrl}assets/icons/close.svg`} onClick={handleClosePopup} alt="close popup" />
@@ -644,32 +753,34 @@ const Maze = () => {
           <button onClick={() => { resetGame(dimsRef.current.cellSize) }}>Play Again</button>
         </div>
       </div>
-      <div className={`listening-popup ${isListening ? "visible" : "hidden"}`}>
-        <h3>{`Listening${renderListeningText(800)}`}</h3>
+      <div className={`listening-popup ${voiceControlRef.current?.isListening ? "visible" : "hidden"}`} ref={listeningPopupRef}>
+        <h3>{`Listening${dots}`}</h3>
         <img src={`${baseUrl}assets/icons/listening.svg`} alt="listening icon" />
-        <p>Recognized command: {voiceControl.transcript}</p>
+        <p>Recognized command: {transcript}</p>
       </div>
       <h2>Voice controlled Maze!</h2>
       <canvas ref={canvasRef}></canvas>
       <div className="generate-button-voice-control-container">
-        <button  className="action-button generateButton" onClick={() => generateMaze(dimsRef.current.cellSize)}>Generate Maze</button>
-        <button  className="action-button activate-controls" onClick={() => setManualControls(!isManualControls)} disabled={!isGenerated}>
+        <button className="action-button generateButton" onClick={() => generateMaze(dimsRef.current.cellSize)}>Generate Maze</button>
+        <button
+          className="action-button activate-controls"
+          onClick={() => setManualControls(!isManualControls)}
+          disabled={!isGenerated || isListening}>
           {isManualControls ? "Deactivate Manual Controls" : "Activate Manual Controls"}
         </button>
         <button
           type="button"
-          className={`mic-button ${isListening ? "active" : ""}`}
-          aria-pressed={isListening}
+          className={`mic-button ${voiceControlRef.current?.isListening ? "active" : ""}`}
+          aria-pressed={voiceControlRef.current?.isListening}
           onClick={() => {
-            voiceControl.toggle()
-            setIsListening(!isListening);
+            voiceControlRef.current?.toggle?.();
           }}
-          disabled={!voiceControl.isSupported || isManualControls || !isGenerated}
+          disabled={!voiceControlRef.current.isSupported || isManualControls || !isGenerated}
         >
-          <img 
-            src={`${isListening ? `${baseUrl}assets/icons/mic-on.svg` : `${baseUrl}assets/icons/mic-off.svg`}`} 
+          <img
+            src={`${voiceControlRef.current?.isListening ? `${baseUrl}assets/icons/mic-on.svg` : `${baseUrl}assets/icons/mic-off.svg`}`}
             alt="active voice control icon" />
-          <span>{isListening ? "Stop Listening" : "Start Listening"}</span>
+          <span>{voiceControlRef.current?.isListening ? "Stop Listening" : "Start Listening"}</span>
         </button>
       </div>
 

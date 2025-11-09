@@ -60,7 +60,7 @@ export default function useVoiceControl({onResult, continuous = true, interimRes
 
             recognitionRef.current = null;
         };
-    }, []);
+    }, [lang]);
 
     const start = () => {
         if(recognitionRef.current && !isListening) {
