@@ -1,0 +1,17 @@
+{
+    "victory": "You won!",
+    "retry": "Try again",
+    "recognized_command": "Command recognized",
+    "main_title": "Voice-controlled maze!",
+    "generate_maze": "Generate maze",
+    "listening": "Listening",
+    "activate_manual_controls": "Activate manual controls",
+    "deactivate_manual_controls": "Deactivate manual controls",
+    "activate_voice_control": "Activate voice control",
+    "deactivate_voice_control": "Deactivate voice control",
+
+    "lang.es": "Spanish",
+    "lang.en": "English",
+    "lang.de": "German",
+    "select_language_label": "Select Language"
+}

@@ -1,0 +1,17 @@
+{
+    "victory": "Du hast gewonnen!",
+    "retry": "Nochmal versuchen",
+    "recognized_command": "Befehl erkannt",
+    "main_title": "Sprachgesteuertes Labyrinth!",
+    "generate_maze": "Labyrinth generieren",
+    "listening": "Höre zu",
+    "activate_manual_controls": "Manuelle Steuerung aktivieren",
+    "deactivate_manual_controls": "Manuelle Steuerung deaktivieren",
+    "activate_voice_control": "Sprachsteuerung aktivieren",
+    "deactivate_voice_control": "Sprachsteuerung deaktivieren",
+
+    "lang.es": "Spanisch",
+    "lang.en": "Englisch",
+    "lang.de": "Deutsch",
+    "select_language_label": "Sprache auswählen"
+}

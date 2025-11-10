@@ -1,20 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
-const languages = [
-    { code: 'es', label: 'Español', flag: '🇪🇸' },
-    { code: 'en', label: 'English', flag: '🇬🇧' },
-    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+const languageOptions = (t) => [
+    { code: 'es', label: t('lang.es'), flag: '🇪🇸' },
+    { code: 'en', label: t('lang.en'), flag: '🇬🇧' },
+    { code: 'de', label: t('lang.de'), flag: '🇩🇪' },
 ];
 
 const LanguageSelector = ({ currentLanguage, onLanguageChange }) => {
+    const { t, i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
-    const activeLang = languages.find(lang => lang.code === currentLanguage) || languages[0];
+    const languages = languageOptions(t);
+
+    const currentLanguageCode = i18n.language.split('-')[0];
+    const activeLang = languages.find(lang => lang.code === currentLanguageCode) || languages[0];
 
     const toggleDropdown = () => setIsOpen(!isOpen);
 
     const handleSelect = (langCode) => {
+        i18n.changeLanguage(langCode);
+
         if (onLanguageChange) {
             onLanguageChange(langCode);
         }
@@ -58,10 +65,10 @@ const LanguageSelector = ({ currentLanguage, onLanguageChange }) => {
                 {languages.map((lang) => (
                     <li
                         key={lang.code}
-                        className={`lang-option ${currentLanguage === lang.code ? 'active' : ''}`}
+                        className={`lang-option ${currentLanguageCode === lang.code ? 'active' : ''}`}
                         onClick={() => handleSelect(lang.code)}
                         role="option"
-                        aria-selected={currentLanguage === lang.code}
+                        aria-selected={currentLanguageCode === lang.code}
                         tabIndex={0}
                         onKeyPress={(e) => { if (e.key === 'Enter') handleSelect(lang.code) }}
                     >

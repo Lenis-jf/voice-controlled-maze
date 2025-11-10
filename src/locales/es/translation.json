@@ -1,0 +1,17 @@
+{
+    "victory": "Ganaste!",
+    "retry": "Jugar de nuevo",
+    "recognized_command": "Comando reconocido",
+    "main_title": "¡Laberinto controlado por voz!",
+    "generate_maze": "Generar laberinto",
+    "listening": "Escuchando",
+    "activate_manual_controls": "Activar controles",
+    "deactivate_manual_controls": "Desactivar controles",
+    "activate_voice_control": "Activar control por voz",
+    "deactivate_voice_control": "Desactivar control por voz",
+
+    "lang.es": "Español",
+    "lang.en": "Inglés",
+    "lang.de": "Alemán",
+    "select_language_label": "Seleccionar idioma"
+}

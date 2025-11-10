@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useCallback, useState } from "react";
 import Confetti from "./Confetti";
 import Player from "./Player";
 import LanguageSelector from "./LanguageSelector";
+import { useTranslation } from 'react-i18next';
 
 import useVoiceControl from "../hooks/useVoiceControl";
 import { interpretVoiceCommand, interpretSequence } from "../utils/voiceCommandsMap";
@@ -193,6 +194,8 @@ function handleClosePopup() {
 }
 
 const Maze = () => {
+  const { t } = useTranslation();
+
   const canvasRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -224,8 +227,8 @@ const Maze = () => {
     width: 500,
     height: 500,
     cellSize: 50,
-    cols: 10,
-    rows: 15,
+    cols: 15,
+    rows: 10,
   });
 
   const updateInterval = 10;
@@ -759,7 +762,6 @@ const Maze = () => {
         };
 
         setCurrentLanguage(lang);
-        // console.log("Language changed to:", lang);
 
         if(voiceControl.isListening) {
           voiceControl.stop();
@@ -768,25 +770,25 @@ const Maze = () => {
       <div className="win-popup-container hidden" ref={popupRef}>
         <div className="win-popup">
           <img className="close" src={`${baseUrl}assets/icons/close.svg`} onClick={handleClosePopup} alt="close popup" />
-          <h2>You Win!</h2>
+          <h2>{t('victory')}</h2>
           <img src={`${baseUrl}assets/icons/trophy.svg`} alt="You Win! trophy-icon" />
-          <button onClick={() => { resetGame(dimsRef.current.cellSize) }}>Play Again</button>
+          <button onClick={() => { resetGame(dimsRef.current.cellSize) }}>{t('retry')}</button>
         </div>
       </div>
       <div className={`listening-popup ${voiceControl.isListening ? "visible" : "hidden"}`} ref={listeningPopupRef}>
-        <h3>{`Listening${dots}`}</h3>
+        <h3>{`${t('listening')}${dots}`}</h3>
         <img src={`${baseUrl}assets/icons/listening.svg`} alt="listening icon" />
-        <p>Recognized command: {transcript}</p>
+        <p>{t('recognized_command')}: {transcript}</p>
       </div>
-      <h2>Voice controlled Maze!</h2>
+      <h2>{t('main_title')}</h2>
       <canvas ref={canvasRef}></canvas>
       <div className="generate-button-voice-control-container">
-        <button className="action-button generateButton" onClick={() => generateMaze(dimsRef.current.cellSize)}>Generate Maze</button>
+        <button className="action-button generateButton" onClick={() => generateMaze(dimsRef.current.cellSize)}>{t('generate_maze')}</button>
         <button
           className="action-button activate-controls"
           onClick={() => setManualControls(!isManualControls)}
-          disabled={!isGenerated || isListening}>
-          {isManualControls ? "Deactivate Manual Controls" : "Activate Manual Controls"}
+          disabled={!isGenerated || voiceControl.isListening}>
+          {isManualControls ? t('deactivate_manual_controls') : t('activate_manual_controls')}
         </button>
         <button
           type="button"
@@ -800,7 +802,7 @@ const Maze = () => {
           <img
             src={`${voiceControl.isListening ? `${baseUrl}assets/icons/mic-on.svg` : `${baseUrl}assets/icons/mic-off.svg`}`}
             alt="active voice control icon" />
-          <span>{voiceControl.isListening ? "Stop Listening" : "Start Listening"}</span>
+          <span>{voiceControl.isListening ? t('deactivate_voice_control') : t('activate_voice_control')}</span>
         </button>
       </div>
 
