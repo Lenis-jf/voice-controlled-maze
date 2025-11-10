@@ -1,5 +1,8 @@
 {
     "victory": "You won!",
+    "defeat": "You lost!",
+    "defeat_message": "Better luck next time!",
+    "time": "Your time was: ",
     "retry": "Try again",
     "recognized_command": "Command recognized",
     "main_title": "Voice-controlled maze!",

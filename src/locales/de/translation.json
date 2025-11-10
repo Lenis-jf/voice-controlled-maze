@@ -1,5 +1,8 @@
 {
     "victory": "Du hast gewonnen!",
+    "defeat": "Du hast verloren!",
+    "defeat_message": "Viel Glück beim nächsten Mal!",
+    "time": "Deine Zeit war: ",
     "retry": "Nochmal versuchen",
     "recognized_command": "Befehl erkannt",
     "main_title": "Sprachgesteuertes Labyrinth!",

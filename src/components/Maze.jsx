@@ -3,6 +3,9 @@ import React, { useEffect, useRef, useCallback, useState } from "react";
 import Confetti from "./Confetti";
 import Player from "./Player";
 import LanguageSelector from "./LanguageSelector";
+import Timer from "./Timer";
+import { formatTime } from "./Timer";
+
 import { useTranslation } from 'react-i18next';
 
 import useVoiceControl from "../hooks/useVoiceControl";
@@ -185,7 +188,7 @@ function Cell(i, j, size, cols, rows) {
 }
 
 function handleClosePopup() {
-  const popup = document.querySelector(".win-popup-container");
+  const popup = document.querySelector(".game-status-popup-container");
 
   if (popup) {
     popup.classList.remove("visible");
@@ -211,7 +214,10 @@ const Maze = () => {
   const processingQueueRef = useRef(false);
 
   const [isGenerated, setIsGenerated] = useState(false);
-  const [hasWon, setHasWon] = useState(false);
+  const [time, setTime] = useState(60000);
+  const [isRunning, setIsRunning] = useState(false);
+
+  const [gameStatus, setGameStatus] = useState("playing");
   const confettiRef = useRef(null);
 
   const cells = useRef([]);
@@ -231,7 +237,7 @@ const Maze = () => {
     rows: 10,
   });
 
-  const updateInterval = 10;
+  const updateInterval = 5;
   const lastUpdateTime = useRef(0);
 
   const numCols = 15;
@@ -323,6 +329,9 @@ const Maze = () => {
   const generateMaze = useCallback((newCellSize) => {
     if (mazeAnimationFrameId.current) cancelAnimationFrame(mazeAnimationFrameId.current);
 
+    setIsGenerated(false);
+    setGameStatus("playing");
+
     cells.current = [];
     stack.current = [];
 
@@ -344,6 +353,10 @@ const Maze = () => {
   }, [drawMazeLoop]);
 
   const resetGame = useCallback((cellSize) => {
+    setIsRunning(false);
+    setGameStatus("playing");
+    setIsGenerated(false);
+
     const popup = popupRef.current;
     if (popup) {
       popup.classList.remove("visible");
@@ -376,21 +389,11 @@ const Maze = () => {
       if (player.update) player.update(delta);
       if (player.draw) player.draw(ctx);
 
-      if (hasWon && popupRef.current) {
+      if (gameStatus === "won" && popupRef.current) {
         const finished = (typeof player.progress !== "undefined" ? player.progress >= 1 : true);
         const notBouncing = (typeof player.bouncing !== "undefined" ? !player.bouncing : true);
 
         if (finished && notBouncing) {
-          // const popup = popupRef.current;
-          // if (popup) {
-          //   popup.classList.remove("hidden");
-          //   popup.classList.add("visible");
-          // }
-
-          // confettiRef.current?.start(3500, { initialCount: 140, streamInterval: 220 });
-
-          // setHasWon(false);
-
           if (playerAnimationFrameId.current) {
             cancelAnimationFrame(playerAnimationFrameId.current);
             playerAnimationFrameId.current = null;
@@ -428,6 +431,8 @@ const Maze = () => {
   }, []);
 
   function movePlayerBy(deltaX, deltaY) {
+    if(!isRunning) setIsRunning(true);
+
     const player = playerRef.current;
     const playerCell = playerCellRef.current;
 
@@ -461,7 +466,8 @@ const Maze = () => {
 
     if (nextCell.isExit) {
       console.log("Player reached the exit!");
-      setHasWon(true);
+      setIsRunning(false);
+      setGameStatus("won");
     }
   }
 
@@ -540,7 +546,7 @@ const Maze = () => {
       const availableHeight = containerHeight > 0 ? containerHeight : Math.floor(viewportHeight * 0.65);
 
       const maxCellSize = 45;
-      const minCellSize = 10;
+      const minCellSize = 5;
       const padding = 2;
 
       const sizeFromWidth = Math.floor((availableWidth - padding) / numCols);
@@ -719,7 +725,7 @@ const Maze = () => {
   }, [voiceControl.isListening]);
 
   useEffect(() => {
-    if(!hasWon) return;
+    if(gameStatus === "playing") return;
 
     const popup = popupRef.current;
 
@@ -730,15 +736,22 @@ const Maze = () => {
     listeningPopupRef.current?.classList.remove("visible");
     listeningPopupRef.current?.classList.add("hidden");
 
-    if (popup) {
+    if(gameStatus === "won") {
+      popup.classList.remove("defeat");
+      popup.classList.add("victory");
+    } else if(gameStatus === "lost") {
+      popup.classList.remove("victory");
+      popup.classList.add("defeat");
+    }
+
+    if(popup) {
       popup.classList.remove("hidden");
       popup.classList.add("visible");
     }
 
+    if(gameStatus !== "won") return;
     confettiRef.current?.start(3500, { initialCount: 140, streamInterval: 220 });
-
-    setHasWon(false);
-  }, [hasWon, voiceControl]);
+  }, [gameStatus, voiceControl]);
 
   useEffect(() => {
     let timeoutId;
@@ -767,11 +780,24 @@ const Maze = () => {
           voiceControl.stop();
         }
       }} />
-      <div className="win-popup-container hidden" ref={popupRef}>
-        <div className="win-popup">
+      <div className="game-status-popup-container hidden" ref={popupRef}>
+        <div className="game-status-popup">
           <img className="close" src={`${baseUrl}assets/icons/close.svg`} onClick={handleClosePopup} alt="close popup" />
-          <h2>{t('victory')}</h2>
-          <img src={`${baseUrl}assets/icons/trophy.svg`} alt="You Win! trophy-icon" />
+          {
+            gameStatus === "won" ? (
+            <>
+              <h2>{t('victory')}</h2>
+              <img src={`${baseUrl}assets/icons/trophy.svg`} alt="You Win! trophy-icon" />
+              <p>{t('time')}</p>
+              <div className="timer">{formatTime(time).minutes}:{formatTime(time).seconds}</div>
+            </>) : gameStatus === "lost" ? (
+              <>
+                <h2>{t('defeat')}</h2>
+                <p>{t('defeat_message')}</p>
+                <img src={`${baseUrl}assets/icons/defeat.svg`} alt="You lost! defeat-icon" />
+              </>
+            ) : null
+          }
           <button onClick={() => { resetGame(dimsRef.current.cellSize) }}>{t('retry')}</button>
         </div>
       </div>
@@ -781,6 +807,15 @@ const Maze = () => {
         <p>{t('recognized_command')}: {transcript}</p>
       </div>
       <h2>{t('main_title')}</h2>
+      <Timer 
+        isRunning={isRunning}
+        setIsRunning={setIsRunning}
+        isGenerated={isGenerated} 
+        time={time}
+        setTime={setTime}
+        gameStatus={gameStatus}
+        onTimeUp={() => setGameStatus("lost")}
+      />
       <canvas ref={canvasRef}></canvas>
       <div className="generate-button-voice-control-container">
         <button className="action-button generateButton" onClick={() => generateMaze(dimsRef.current.cellSize)}>{t('generate_maze')}</button>
