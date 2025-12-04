@@ -24,7 +24,6 @@ function parseNumberToken(token) {
     return NUM_WORDS[token.toLowerCase()] || null;
 }
 
-// devuelve array de comandos (puede ser vacío)
 export function interpretSequence(transcript = "") {
     const text = String(transcript || "").toLowerCase().trim();
     if (!text) return [];
@@ -35,7 +34,6 @@ export function interpretSequence(transcript = "") {
     const out = [];
 
     for (const part of parts) {
-        // buscar número explícito
         const numMatch = part.match(/\b(\d+|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|one|two|three|four|five|six|seven|eight|nine|ten|einmal|zweimal|dreimal|viermal|fünfmal|sechsmal|siebenmal|achtmal|neunmal|zehnmal)\b/);
         let repeat = 1;
         if (numMatch) repeat = parseNumberToken(numMatch[1]) || 1;
@@ -50,10 +48,8 @@ export function interpretSequence(transcript = "") {
 
         // si no encontró tokens separados, intentar detectar dirección en toda la frase
         if (found.length === 0) {
-            // buscar dirección completa en la frase
             for (const possible of ["up", "down", "left", "right", "generate", "stop"]) {
                 const mapped = interpretVoiceCommand(possible); // map via interpretVoiceCommand
-                // check original regex by testing phrase with the mapping's keywords
                 if (interpretVoiceCommand(part) === mapped) found.push(mapped);
             }
         }

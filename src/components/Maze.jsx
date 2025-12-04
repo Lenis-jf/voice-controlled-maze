@@ -112,7 +112,7 @@ function Cell(i, j, size, cols, rows) {
   this.walls = [true, true, true, true]; // top, right, bottom, left
   this.visited = false;
   this.distanceToStart = Infinity;
-  this.distanceToStart = false;
+  this.isStart = false;
   this.isExit = false;
 
   this.draw = function (ctx) {
@@ -197,7 +197,7 @@ function handleClosePopup() {
 }
 
 const Maze = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const canvasRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
@@ -205,8 +205,8 @@ const Maze = () => {
   const popupRef = useRef(null);
 
   const listeningPopupRef = useRef(null);
-  const [currentLang, setCurrentLanguage] = useState("en-US");
-  
+  const [currentLang, setCurrentLanguage] = useState(i18n.language || "de-DE");
+
   const [transcript, setTranscript] = useState("");
   const [dots, setDots] = useState("");
 
@@ -431,7 +431,7 @@ const Maze = () => {
   }, []);
 
   function movePlayerBy(deltaX, deltaY) {
-    if(!isRunning) setIsRunning(true);
+    if (!isRunning) setIsRunning(true);
 
     const player = playerRef.current;
     const playerCell = playerCellRef.current;
@@ -659,14 +659,14 @@ const Maze = () => {
   }
 
   function processQueue() {
-    if(processingQueueRef.current) return;
-    if(commandQueueRef.current.length === 0) return;
+    if (processingQueueRef.current) return;
+    if (commandQueueRef.current.length === 0) return;
     processingQueueRef.current = true;
 
     const firstCmd = commandQueueRef.current.shift();
     executeCommand(firstCmd);
 
-    if(commandQueueRef.current.length > 0) {      
+    if (commandQueueRef.current.length > 0) {
       const next = () => {
         const cmd = commandQueueRef.current.shift();
         if (!cmd) {
@@ -725,38 +725,38 @@ const Maze = () => {
   }, [voiceControl.isListening]);
 
   useEffect(() => {
-    if(gameStatus === "playing") return;
+    if (gameStatus === "playing") return;
 
     const popup = popupRef.current;
 
-    if(voiceControl.isListening) {
-      voiceControlRef.current.stop();
+    if (voiceControl?.isListening) {
+      try { voiceControl.stop(); } catch (e) { console.warn("Error stopping voiceControl on game end:", e); }
     }
 
     listeningPopupRef.current?.classList.remove("visible");
     listeningPopupRef.current?.classList.add("hidden");
 
-    if(gameStatus === "won") {
+    if (gameStatus === "won") {
       popup.classList.remove("defeat");
       popup.classList.add("victory");
-    } else if(gameStatus === "lost") {
+    } else if (gameStatus === "lost") {
       popup.classList.remove("victory");
       popup.classList.add("defeat");
     }
 
-    if(popup) {
+    if (popup) {
       popup.classList.remove("hidden");
       popup.classList.add("visible");
     }
 
-    if(gameStatus !== "won") return;
+    if (gameStatus !== "won") return;
     confettiRef.current?.start(3500, { initialCount: 140, streamInterval: 220 });
   }, [gameStatus, voiceControl]);
 
   useEffect(() => {
     let timeoutId;
 
-    if(!voiceControl.isListening) {
+    if (!voiceControl.isListening) {
       timeoutId = setTimeout(() => {
         setTranscript("");
       }, 300);
@@ -767,36 +767,40 @@ const Maze = () => {
 
   return (
     <div className="maze-container" ref={containerRef}>
-      <LanguageSelector currentLanguage={currentLang.split("-")[0]} onLanguageChange={(lang) => {
-        const languageMap = {
-          'es': 'es-CO',
-          'en': 'en-US',
-          'de': 'de-DE',
-        };
+      <LanguageSelector
+        currentLanguage={currentLang}
+        onLanguageChange={(lang) => {
+          const languageMap = {
+            'es': 'es-CO',
+            'en': 'en-US',
+            'de': 'de-DE',
+          };
 
-        setCurrentLanguage(lang);
+          const mapped = languageMap[lang] || lang;
+          setCurrentLanguage(mapped);
 
-        if(voiceControl.isListening) {
-          voiceControl.stop();
-        }
-      }} />
+          if (voiceControl?.isListening) {
+            try { voiceControl.stop(); } catch (e) { console.warn("Failed to stop voice control on language change", e); }
+          }
+        }}
+      />
       <div className="game-status-popup-container hidden" ref={popupRef}>
         <div className="game-status-popup">
           <img className="close" src={`${baseUrl}assets/icons/close.svg`} onClick={handleClosePopup} alt="close popup" />
           {
             gameStatus === "won" ? (
-            <>
-              <h2>{t('victory')}</h2>
-              <img src={`${baseUrl}assets/icons/trophy.svg`} alt="You Win! trophy-icon" />
-              <p>{t('time')}</p>
-              <div className="timer">{formatTime(time).minutes}:{formatTime(time).seconds}</div>
-            </>) : gameStatus === "lost" ? (
               <>
-                <h2>{t('defeat')}</h2>
-                <p>{t('defeat_message')}</p>
-                <img src={`${baseUrl}assets/icons/defeat.svg`} alt="You lost! defeat-icon" />
-              </>
-            ) : null
+                <h2>{t('victory')}</h2>
+                <img src={`${baseUrl}assets/icons/trophy.svg`} alt="You Win! trophy-icon" />
+                <p>{t('time')}</p>
+                <div className="timer">{formatTime(time).minutes}:{formatTime(time).seconds}</div>
+              </>) : gameStatus === "lost" ? (
+                <>
+                  <h2>{t('defeat')}</h2>
+                  <p>{t('defeat_message')}</p>
+                  <img src={`${baseUrl}assets/icons/defeat.svg`} alt="You lost! defeat-icon" />
+                </>
+              ) : null
           }
           <button onClick={() => { resetGame(dimsRef.current.cellSize) }}>{t('retry')}</button>
         </div>
@@ -807,10 +811,10 @@ const Maze = () => {
         <p>{t('recognized_command')}: {transcript}</p>
       </div>
       <h2>{t('main_title')}</h2>
-      <Timer 
+      <Timer
         isRunning={isRunning}
         setIsRunning={setIsRunning}
-        isGenerated={isGenerated} 
+        isGenerated={isGenerated}
         time={time}
         setTime={setTime}
         gameStatus={gameStatus}

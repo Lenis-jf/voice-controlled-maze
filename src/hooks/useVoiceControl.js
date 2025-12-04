@@ -1,7 +1,7 @@
 import React from "react";
 import {useState, useRef, useEffect} from "react";
 
-export default function useVoiceControl({onResult, continuous = true, interimResults = false, lang = 'es-CO'} = {}) {
+export default function useVoiceControl({onResult, continuous = true, interimResults = false, lang = 'de-DE'} = {}) {
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef(null);
     const [isSupported, setIsSupported] = useState(false);
