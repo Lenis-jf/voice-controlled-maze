@@ -67,27 +67,29 @@
         height: 25vw;
         max-height: 420px;
         border-radius: 2.2rem;
+        background-color: rgba($main-active-color, 0.75);
 
         .burger-container {
-            background-color: none;
+            background: none;
             box-shadow: none;
             border: none;
+            backdrop-filter: none;
         }
 
-        &::before {
-            content: "";
-            position: absolute;
-            top: 10%;
-            left: 10%;
-            width: 80%;
-            height: 80%;
-            @include liquid-glass;
-            border-radius: 1.4rem;
-            background-color: rgba($main-active-color, 0.75);
-            border: 1.5px solid rgba(255, 255, 255, 0.35);
-            z-index: 1000;
-        }
-    } 
+        // &::before {
+        //     content: "";
+        //     position: absolute;
+        //     top: 10%;
+        //     left: 10%;
+        //     width: 80%;
+        //     height: 80%;
+        //     @include liquid-glass;
+        //     border-radius: 1.4rem;
+        //     background-color: rgba($main-active-color, 0.75);
+        //     border: 1.5px solid rgba(255, 255, 255, 0.35);
+        //     z-index: 1000;
+        // }
+    }
 
     &.open .burger-line:nth-child(2) {
         animation-play-state: running;
@@ -96,7 +98,7 @@
     &.open .burger-line:nth-child(1) {
         transform: rotate(45deg) translate(5px, 5px);
     }
-    
+
     &.open .burger-line:nth-child(3) {
         transform: rotate(-45deg) translate(5px, -5px);
     }
