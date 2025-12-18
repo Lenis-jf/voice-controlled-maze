@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useCallback, useState } from "react";
 import Confetti from "./Confetti";
 import Player from "./Player";
 import LanguageSelector from "./LanguageSelector";
+import Menu from "./Menu";
 import Timer from "./Timer";
 import { formatTime } from "./Timer";
 
@@ -705,7 +706,6 @@ const Maze = () => {
       case 'STOP':
         if (isListening) {
           voiceControl?.stop?.();
-          // setIsListening(false);
         }
         break;
       default:
@@ -784,6 +784,7 @@ const Maze = () => {
           }
         }}
       />
+      <Menu isOpen={false} onClose={() => {}} />
       <div className="game-status-popup-container hidden" ref={popupRef}>
         <div className="game-status-popup">
           <img className="close" src={`${baseUrl}assets/icons/close.svg`} onClick={handleClosePopup} alt="close popup" />
