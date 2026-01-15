@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 
 export const formatTime = (time) => {
 	const seconds = String(Math.floor((time / 1000) % 60)).padStart(2, '0');
@@ -7,7 +7,7 @@ export const formatTime = (time) => {
 	return { minutes, seconds };
 }
 
-const Timer = ({ isRunning, setIsRunning, isGenerated, time, setTime, onTimeUp, gameStatus }) => {
+const Timer = ({ isRunning, setIsRunning, isGenerated, time, setTime, onTimeUp, gameStatus, initialTime = 60000 }) => {
 	const [isReady, setIsReady] = useState(false);
 
 	useEffect(() => {
@@ -40,9 +40,16 @@ const Timer = ({ isRunning, setIsRunning, isGenerated, time, setTime, onTimeUp, 
 	}, [isGenerated]);
 
 	function reset() {
-    setTime(60000);
+		setTime(initialTime);
     setIsRunning(false);
 	}
+
+	useEffect(() => {
+		// If initialTime changes and the timer isn't running, update current time
+		if (!isRunning) {
+			setTime(initialTime);
+		}
+	}, [initialTime]);
 
 	return (
 		<div className="timer">

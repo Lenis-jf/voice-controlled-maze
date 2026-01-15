@@ -64,31 +64,131 @@
         width: 20vw;
         max-width: 380px;
         min-height: 280px;
-        height: 25vw;
-        max-height: 420px;
+        height: 60vh;
+        max-height: 820px;
         border-radius: 2.2rem;
         background-color: rgba($main-active-color, 0.75);
 
         .burger-container {
-            background: none;
+            background-color: transparent;
             box-shadow: none;
             border: none;
             backdrop-filter: none;
         }
 
-        // &::before {
-        //     content: "";
-        //     position: absolute;
-        //     top: 10%;
-        //     left: 10%;
-        //     width: 80%;
-        //     height: 80%;
-        //     @include liquid-glass;
-        //     border-radius: 1.4rem;
-        //     background-color: rgba($main-active-color, 0.75);
-        //     border: 1.5px solid rgba(255, 255, 255, 0.35);
-        //     z-index: 1000;
-        // }
+        .menu-content {
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: calc(100% - 60px);
+            width: 100%;
+            color: $text-color;
+            text-align: center;
+            gap: 20px;
+
+            h4 {
+                font-family: $font-body;
+                font-size: clamp(1rem, 1.5vw + 0.2rem, 1.5rem);
+                color: white;
+                // margin-top: 10px;
+            }
+
+            .dificulty-levels {
+                display: flex;
+                gap: 8px;
+                font-size: clamp(0.8rem, 1.2vw, 1.2rem);
+
+                span {
+                    cursor: pointer;
+                    padding: 6px 8px;
+                    border-radius: 8px;
+                    background-color: rgba(255, 255, 255, 0.2);
+                    transition: background-color 0.3s ease;
+                    color: white;
+                    @include liquid-glass;
+
+                    &:hover {
+                        background-color: rgba(255, 255, 255, 0.35);
+                    }
+
+                    &.easy-mode {
+                        background-color: rgba($color: #4CAF50, $alpha: 1);
+                    }
+
+                    &.medium-mode {
+                        background-color: rgba($color: #FFC107, $alpha: 1);
+                    }
+
+                    &.hard-mode {
+                        background-color: rgba($color: #F44336, $alpha: 1);
+                    }
+                }
+            }
+
+            .customize-timer {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+
+            label {
+                font-size: clamp(0.8rem, 1.2vw, 1.2rem);
+                text-align: left;
+                color: white;
+            }
+
+            input[type="number"] {
+                width: 100%;
+                padding: 0 0.5rem;
+                height: 20px;
+                border-radius: 0.3rem;
+                margin-top: 0.5rem;
+                color: black;
+                @include liquid-glass;
+                background-color: rgba(255, 255, 255, 0.65);
+            }
+
+            button {
+                padding: 0.6rem 1rem;
+                border-radius: 0.5rem;
+                color: white;
+                @include liquid-glass;
+                background-color: rgba($main-active-color, 0.65);
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+
+                &:hover {
+                    background-color: rgba(#4CAF50, 0.65);
+                }
+            }
+
+            .customize-maze-size {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+
+                .size-labels {
+                    display: flex;
+                    gap: 12px;
+
+                    label {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+
+                        input[type="number"] {
+                            min-width: 4rem;
+                            width: 5vw;
+                            max-width: 5rem;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     &.open .burger-line:nth-child(2) {
