@@ -124,6 +124,11 @@
                     &.hard-mode {
                         background-color: rgba($color: #F44336, $alpha: 1);
                     }
+
+                    &.selected {
+                        outline: 2px solid #39FF14;
+                        box-shadow: 0 0 10px #39FF14;
+                    }
                 }
             }
 

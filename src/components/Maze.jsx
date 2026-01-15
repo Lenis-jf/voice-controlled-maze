@@ -495,6 +495,7 @@ const Maze = () => {
   // Keyboard
   useEffect(() => {
     function handleKeyDown(e) {
+      if (isVoiceListeningRef.current) return;
       if (!playerRef.current) return;
       switch (e.key) {
         case "ArrowUp": case "w": movePlayerBy(0, -1); break;
@@ -561,6 +562,12 @@ const Maze = () => {
   }
 
   const voiceControl = useVoiceControl({ onResult: handleVoiceCommand, lang: currentLang || "en-US" });
+
+  const isVoiceListeningRef = useRef(false);
+
+  useEffect(() => {
+    isVoiceListeningRef.current = voiceControl.isListening;
+  }, [voiceControl.isListening]);
 
   useEffect(() => {
     if (!voiceControl.isListening) {

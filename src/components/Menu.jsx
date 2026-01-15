@@ -7,6 +7,7 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
     const [localTimerSeconds, setLocalTimerSeconds] = useState(Math.floor((initialTime || 60000) / 1000));
     const [localCols, setLocalCols] = useState(gridSize?.cols || 15);
     const [localRows, setLocalRows] = useState(gridSize?.rows || 10);
+    const [selectedDifficulty, setSelectedDifficulty] = useState(null);
 
     const { t, i18n } = useTranslation();
 
@@ -20,13 +21,46 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
     const applyTimer = () => {
         const secs = isNaN(localTimerSeconds) ? 60 : Math.max(5, Math.min(3600, Number(localTimerSeconds)));
         onSetInitialTime?.(secs * 1000);
+        setSelectedDifficulty(null);
     };
 
     const applyGridSize = () => {
         const cols = isNaN(localCols) ? gridSize?.cols || 15 : Number(localCols);
         const rows = isNaN(localRows) ? gridSize?.rows || 10 : Number(localRows);
         onSetGridSize?.({ cols, rows });
+        setSelectedDifficulty(null);
     };
+
+    const handleDifficulty = (level) => {
+        let cols, rows, seconds;
+        switch(level) {
+            case 'easy':
+                cols = 8;
+                rows = 5;
+                seconds = 60;
+                break;
+            case 'medium':
+                cols = 15;
+                rows = 10;
+                seconds = 120;
+                break;
+            case 'hard':
+                cols = 15;
+                rows = 15;
+                seconds = 120;
+                break;
+            default:
+                return;
+        }
+
+        setSelectedDifficulty(level);
+        setLocalCols(cols);
+        setLocalRows(rows);
+        setLocalTimerSeconds(seconds);
+        
+        onSetInitialTime?.(seconds * 1000);
+        onSetGridSize?.({ cols, rows });
+    }
 
     useEffect(() => {
         const closeMenu = (e) => {
@@ -45,9 +79,15 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
         };
     }, [menuOpen]);
 
+    const handleKeyDown = (e, callback) => {
+        if (e.key === 'Enter') {
+            callback();
+        }
+    }
+
     return (
-        <div className={menuOpen ? "menu open" : "menu closed"} ref={mainBurgerContainerRef} onClick={toggleMenu}>
-            <div className="burger-container">
+        <div className={menuOpen ? "menu open" : "menu closed"} ref={mainBurgerContainerRef}>
+            <div className="burger-container" onClick={toggleMenu}>
                 <div className="burger-line"></div>
                 <div className="burger-line middle-line"></div>
                 <div className="burger-line"></div>
@@ -57,9 +97,9 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
                 <div className="menu-content">
                     <h4>{t("Dificulty")}</h4>
                     <div className="dificulty-levels">
-                        <span className="easy-mode">{t("Easy")}</span>
-                        <span className="medium-mode">{t("Medium")}</span>
-                        <span className="hard-mode">{t("Hard")}</span>
+                        <span className={`easy-mode ${selectedDifficulty === 'easy' ? 'selected' : ''}`} onClick={() => handleDifficulty('easy')}>{t("Easy")}</span>
+                        <span className={`medium-mode ${selectedDifficulty === 'medium' ? 'selected' : ''}`} onClick={() => handleDifficulty('medium')}>{t("Medium")}</span>
+                        <span className={`hard-mode ${selectedDifficulty === 'hard' ? 'selected' : ''}`} onClick={() => handleDifficulty('hard')}>{t("Hard")}</span>
                     </div>
                     <h4>{t("Customize Timer")}</h4>
                     <div className="customize-timer">
@@ -71,6 +111,7 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
                                 max="300"
                                 value={localTimerSeconds}
                                 onChange={(e) => setLocalTimerSeconds(e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, applyTimer)}
                                 onClick={(e) => e.stopPropagation()}
                             />
                         </label>
@@ -89,6 +130,7 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
                                     max="100"
                                     value={localCols}
                                     onChange={(e) => setLocalCols(e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(e, applyGridSize)}
                                     onClick={(e) => e.stopPropagation()}
                                 />
                             </label>
@@ -100,6 +142,7 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
                                     max="40"
                                     value={localRows}
                                     onChange={(e) => setLocalRows(e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(e, applyGridSize)}
                                     onClick={(e) => e.stopPropagation()}
                                 />
                             </label>

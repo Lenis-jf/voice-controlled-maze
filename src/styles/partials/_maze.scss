@@ -225,8 +225,8 @@ body {
     right: clamp(1rem, calc(3rem + 3vw), 8rem);
     z-index: 100;
 
-    width: 130px;
-    height: 130px;
+    width: 200px;
+    height: 200px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
@@ -378,6 +378,7 @@ body {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      background: rgba(#c9c9c9, 0.8);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.3);
