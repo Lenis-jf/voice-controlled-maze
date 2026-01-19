@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import useSound from 'use-sound';
+import { Howler } from 'howler';
 
 import Confetti from "./Confetti";
 import Player from "./Player";
@@ -16,6 +17,10 @@ import uiElementSelectionSound from "../../public/assets/sounds/ui-selection-sou
 import defeatSound from "../../public/assets/sounds/defeat-sound.mp3";
 import generating from "../../public/assets/sounds/generating-maze-sound.mp3";
 import heartbeat from "../../public/assets/sounds/heart-beat-sound.mp3";
+import bounceSound from "../../public/assets/sounds/bouncing-sound.mp3";
+import generating2 from "../../public/assets/sounds/generating-maze-sound-2.mp3";
+import playerMovementSound from "../../public/assets/sounds/player-movement-sound.wav";
+import roundStartSound from "../../public/assets/sounds/round-start.mp3";
 
 // Stylized 3D computer keyboard focusing on WASD keys. The keys are pressed one by one, smoothly going down and up, with a subtle glow when pressed. Simple materials, low realism, old-school video game style (early 2010s). Soft lighting, dark game-like background, slightly angled camera. Clear tutorial animation, short looping video.
 
@@ -202,12 +207,72 @@ const Maze = () => {
   const [isListening, setIsListening] = useState(false);
   const [isManualControls, setManualControls] = useState(false);
   const [isHeartbeatPlaying, setIsHeartbeatPlaying] = useState(false);
+  
+  const gameStatusRef = useRef(gameStatus);
+  const isRunningRef = useRef(isRunning);
+  const audioUnlockedRef = useRef(false);
+  
+  // Refs para los sonidos problemáticos
+  const roundStartSoundRef = useRef(null);
+  const bounceSoundRef = useRef(null);
+  const movementSoundRef = useRef(null);
+  
+  useEffect(() => {
+    gameStatusRef.current = gameStatus;
+  }, [gameStatus]);
 
-  const [playWin] = useSound(winSound);
-  const [playElementSelected] = useSound(uiElementSelectionSound);
-  const [playDefeat] = useSound(defeatSound);
-  const [playGenerating, { stop: stopGenerating }] = useSound(generating, { loop: true });
-  const [playHeartbeat, { stop: stopHeartbeat }] = useSound(heartbeat, { loop: true });
+  useEffect(() => {
+    isRunningRef.current = isRunning;
+  }, [isRunning, gameStatus]);
+
+  // Función para desbloquear audio - llamar síncronamente, luego reproducir
+  const ensureAudioUnlocked = useCallback(() => {
+    if (Howler.ctx && Howler.ctx.state === 'suspended') {
+      Howler.ctx.resume();
+    }
+  }, []);
+
+  const [playWin] = useSound(winSound, { volume: 1.0 });
+  const [playElementSelected] = useSound(uiElementSelectionSound, { volume: 1.0 });
+  const [playDefeat] = useSound(defeatSound, { volume: 0.8 });
+  const [playGenerating, { stop: stopGenerating }] = useSound(generating, { loop: true, volume: 0.8 });
+  const [playGenerating2, { stop: stopGenerating2 }] = useSound(generating2, { loop: true, volume: 0.8 });
+  const [playHeartbeat, { stop: stopHeartbeat }] = useSound(heartbeat, { loop: true, volume: 1.5 });
+  const [, { sound: roundStartHowl }] = useSound(roundStartSound, { volume: 1.0 });
+  const [, { sound: bounceHowl }] = useSound(bounceSound, { volume: 1.0 });
+  const [, { sound: movementHowl }] = useSound(playerMovementSound, { volume: 0.2 });
+
+  // Guardar los howls en refs cuando se cargan
+  useEffect(() => {
+    if (roundStartHowl) roundStartSoundRef.current = roundStartHowl;
+  }, [roundStartHowl]);
+  
+  useEffect(() => {
+    if (bounceHowl) bounceSoundRef.current = bounceHowl;
+  }, [bounceHowl]);
+  
+  useEffect(() => {
+    if (movementHowl) movementSoundRef.current = movementHowl;
+  }, [movementHowl]);
+
+  // Funciones wrapper para reproducir usando refs
+  const playRoundStart = useCallback(() => {
+    if (roundStartSoundRef.current) {
+      roundStartSoundRef.current.play();
+    }
+  }, []);
+
+  const playBounce = useCallback(() => {
+    if (bounceSoundRef.current) {
+      bounceSoundRef.current.play();
+    }
+  }, []);
+
+  const playPlayerMovement = useCallback(() => {
+    if (movementSoundRef.current) {
+      movementSoundRef.current.play();
+    }
+  }, []);
 
   const updateInterval = 5;
 
@@ -375,7 +440,7 @@ const Maze = () => {
           currentCell.current = localCurrent;
           setIsGenerated(true);
           isGeneratingMazeRef.current = false;
-          stopGenerating();
+          stopGenerating2();
 
           generatePlayer();
           return;
@@ -397,7 +462,7 @@ const Maze = () => {
     setIsGenerated(false);
     setGameStatus("playing");
     isGeneratingMazeRef.current = true;
-    playGenerating();
+    playGenerating2();
     cells.current = [];
     stack.current = [];
 
@@ -437,7 +502,15 @@ const Maze = () => {
   }, [generateMaze, stopHeartbeat]);
 
   const movePlayerBy = (deltaX, deltaY) => {
-    if (!isRunning) setIsRunning(true);
+    // console.log(`Moving player by (${deltaX}, ${deltaY}), gameStatus: ${gameStatus}, isRunning: ${isRunning}`);
+
+    if (gameStatusRef.current !== "playing") return;
+    if (!isRunningRef.current) {
+      setIsRunning(true);
+      isRunningRef.current = true; // Actualizar inmediatamente para evitar múltiples llamadas
+      ensureAudioUnlocked();
+      playRoundStart();
+    }
     const player = playerRef.current;
     const playerCell = playerCellRef.current;
 
@@ -448,7 +521,8 @@ const Maze = () => {
     const nextCellIndex = index(nextIndexI, nextIndexJ, dimsRef.current.cols, dimsRef.current.rows);
 
     if (nextCellIndex === -1) {
-      // playBounce();
+      ensureAudioUnlocked();
+      playBounce();
       player.triggerBounce({ x: deltaX, y: deltaY });
       return;
     }
@@ -462,18 +536,53 @@ const Maze = () => {
     if (deltaY === -1 && playerCell.walls[0]) wallBlocking = true;
 
     if (wallBlocking) {
+      ensureAudioUnlocked();
+      playBounce();
       player.triggerBounce({ x: deltaX, y: deltaY });
       return;
     }
 
     player.moveTo(nextCell);
     playerCellRef.current = nextCell;
+    ensureAudioUnlocked();
+    playPlayerMovement();
 
     if (nextCell.isExit) {
       setIsRunning(false);
       setGameStatus("won");
     }
   };
+
+  useEffect(() => {
+    // Fix browser audio policy - unlock on first user interaction
+    const unlockAudio = () => {
+      if (audioUnlockedRef.current) return;
+      if (Howler.ctx) {
+        if (Howler.ctx.state === 'suspended') {
+          Howler.ctx.resume().then(() => {
+            audioUnlockedRef.current = true;
+            console.log('Audio context unlocked');
+          });
+        } else {
+          audioUnlockedRef.current = true;
+        }
+      }
+    };
+    
+    // Intentar desbloquear inmediatamente si ya hubo interacción
+    unlockAudio();
+    
+    document.addEventListener('click', unlockAudio, { once: false });
+    document.addEventListener('keydown', unlockAudio, { once: false });
+    document.addEventListener('touchstart', unlockAudio, { once: false });
+    document.addEventListener('touchend', unlockAudio, { once: false });
+    return () => {
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('touchend', unlockAudio);
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -626,6 +735,8 @@ const Maze = () => {
       popup.classList.remove("hidden");
       popup.classList.add("visible");
     }
+
+    console.log(`Game ended with status: ${gameStatus}`);
   }, [gameStatus, voiceControl]);
 
   useEffect(() => {
@@ -717,14 +828,14 @@ const Maze = () => {
         <button
           className="action-button activate-controls"
           onClick={() => { playElementSelected(); setManualControls(!isManualControls); }}
-          disabled={!isGenerated || voiceControl.isListening}>
+          disabled={!isGenerated || voiceControl.isListening || gameStatus !== "playing"}>
           {isManualControls ? t('deactivate_manual_controls') : t('activate_manual_controls')}
         </button>
         <button
           type="button"
           className={`mic-button ${voiceControl.isListening ? "active" : ""}`}
           onClick={() => { playElementSelected(); voiceControl.toggle?.(); }}
-          disabled={!voiceControl.isSupported || isManualControls || !isGenerated}
+          disabled={!voiceControl.isSupported || isManualControls || !isGenerated || gameStatus !== "playing"}
         >
           <img src={`${baseUrl}assets/icons/${voiceControl.isListening ? 'mic-on.svg' : 'mic-off.svg'}`} alt="mic" />
           <span>{voiceControl.isListening ? t('deactivate_voice_control') : t('activate_voice_control')}</span>

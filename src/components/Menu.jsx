@@ -156,11 +156,11 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
                             {t("Seconds")}
                             <input
                                 type="number"
-                                min="10"
+                                min="5"
                                 max="1800"
                                 value={localTimerSeconds}
-                                onChange={(e) => handleInputChange(e.target.value, 10, 1800, setLocalTimerSeconds)}
-                                onBlur={(e) => handleInputBlur(e.target.value, 10, setLocalTimerSeconds)}
+                                onChange={(e) => handleInputChange(e.target.value, 5, 1800, setLocalTimerSeconds)}
+                                onBlur={(e) => handleInputBlur(e.target.value, 5, setLocalTimerSeconds)}
                                 onKeyDown={(e) => handleKeyDown(e, applyTimer)}
                                 onClick={(e) => e.stopPropagation()}
                             />

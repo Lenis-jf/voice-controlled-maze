@@ -72,6 +72,9 @@ export default class Player {
   triggerBounce(directionVec = { x: 0, y: 0 }) {
     if (this.progress < 1) return; // no interferir con el movimiento en curso
 
+    this.x = this.endPos.x;
+    this.y = this.endPos.y;
+
     this.bounceDir = { x: directionVec.x || 0, y: directionVec.y || 0 };
     this.bouncing = true;
     this.bounceElapsed = 0;
