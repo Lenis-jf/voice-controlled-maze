@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
+import useSound from 'use-sound';
 
 import Confetti from "./Confetti";
 import Player from "./Player";
@@ -9,6 +10,14 @@ import Timer, { formatTime } from "./Timer";
 import { useTranslation } from 'react-i18next';
 import useVoiceControl from "../hooks/useVoiceControl";
 import { interpretVoiceCommand, interpretSequence } from "../utils/voiceCommandsMap";
+
+import winSound from "../../public/assets/sounds/win-sound.mp3";
+import uiElementSelectionSound from "../../public/assets/sounds/ui-selection-sound.mp3";
+import defeatSound from "../../public/assets/sounds/defeat-sound.mp3";
+import generating from "../../public/assets/sounds/generating-maze-sound.mp3";
+import heartbeat from "../../public/assets/sounds/heart-beat-sound.mp3";
+
+// Stylized 3D computer keyboard focusing on WASD keys. The keys are pressed one by one, smoothly going down and up, with a subtle glow when pressed. Simple materials, low realism, old-school video game style (early 2010s). Soft lighting, dark game-like background, slightly angled camera. Clear tutorial animation, short looping video.
 
 const baseUrl = import.meta.env.VITE_PUBLIC_URL || "";
 
@@ -97,9 +106,9 @@ function Cell(i, j, size, cols, rows) {
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    
+
     const { x, y, size } = this;
-    
+
     if (this.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + size, y); }
     if (this.walls[1]) { ctx.moveTo(x + size, y); ctx.lineTo(x + size, y + size); }
     if (this.walls[2]) { ctx.moveTo(x + size, y + size); ctx.lineTo(x, y + size); }
@@ -122,7 +131,7 @@ function Cell(i, j, size, cols, rows) {
     }
   };
 
-  this.drawRect = function(ctx, x, y, size) {
+  this.drawRect = function (ctx, x, y, size) {
     if (ctx.roundRect) {
       ctx.beginPath();
       ctx.roundRect(x + 2.5, y + 2.5, size - 5, size - 5, 4);
@@ -161,20 +170,21 @@ const Maze = () => {
   const listeningPopupRef = useRef(null);
   const confettiRef = useRef(null);
   const ctxRef = useRef(null);
-  
+
   const cells = useRef([]);
   const stack = useRef([]);
   const currentCell = useRef(null);
   const playerCellRef = useRef(null);
   const exitCell = useRef(null);
   const playerRef = useRef(null);
-  
+
   const mazeAnimationFrameId = useRef(null);
   const playerAnimationFrameId = useRef(null);
   const lastUpdateTime = useRef(0);
   const isGeneratingMazeRef = useRef(false);
   const suppressAutoResizeRef = useRef(false);
-  
+  const isMenuOpenRef = useRef(false);
+
   const dimsRef = useRef({ width: 500, height: 500, cellSize: 50, cols: 15, rows: 10 });
 
   const commandQueueRef = useRef([]);
@@ -191,7 +201,14 @@ const Maze = () => {
   const [gridSize, setGridSize] = useState({ cols: 15, rows: 10 });
   const [isListening, setIsListening] = useState(false);
   const [isManualControls, setManualControls] = useState(false);
-  
+  const [isHeartbeatPlaying, setIsHeartbeatPlaying] = useState(false);
+
+  const [playWin] = useSound(winSound);
+  const [playElementSelected] = useSound(uiElementSelectionSound);
+  const [playDefeat] = useSound(defeatSound);
+  const [playGenerating, { stop: stopGenerating }] = useSound(generating, { loop: true });
+  const [playHeartbeat, { stop: stopHeartbeat }] = useSound(heartbeat, { loop: true });
+
   const updateInterval = 5;
 
   const computeCellSize = useCallback((cols, rows) => {
@@ -209,7 +226,7 @@ const Maze = () => {
 
     const sizeFromWidth = Math.floor((availableWidth - padding) / cols);
     const sizeFromHeight = Math.floor((availableHeight - padding) / rows);
-    
+
     let newCellSize = Math.min(maxCellSize, sizeFromWidth, sizeFromHeight);
     return Math.max(minCellSize, newCellSize);
   }, []);
@@ -238,7 +255,7 @@ const Maze = () => {
     const ctx = ctxRef.current;
     if (!ctx) return;
     const { width, height } = dimsRef.current;
-    
+
     ctx.clearRect(0, 0, width, height);
     if (offscreenCanvasRef.current) {
       ctx.drawImage(offscreenCanvasRef.current, 0, 0, width, height);
@@ -247,12 +264,12 @@ const Maze = () => {
 
   const drawMazeToOffscreen = useCallback((cols, rows, cellsArray) => {
     if (!offscreenCanvasRef.current) return;
-    
-    const cellSize = dimsRef.current.cellSize; 
+
+    const cellSize = dimsRef.current.cellSize;
     const ratio = window.devicePixelRatio || 1;
     const w = cellSize * cols;
     const h = cellSize * rows;
-    
+
     const off = offscreenCanvasRef.current;
     off.width = Math.max(1, Math.floor(w * ratio));
     off.height = Math.max(1, Math.floor(h * ratio));
@@ -266,13 +283,13 @@ const Maze = () => {
     offCtx.fillRect(0, 0, w, h);
 
     for (const cell of cellsArray) {
-        cell.draw(offCtx);
+      cell.draw(offCtx);
     }
   }, []);
 
   const playerdrawMazeLoop = useCallback(() => {
     playerAnimationFrameId.current = requestAnimationFrame(playerdrawMazeLoop);
-    
+
     const ctx = ctxRef.current;
     redrawAll(); // Dibuja fondo
 
@@ -306,14 +323,14 @@ const Maze = () => {
   const createDrawMazeLoop = useCallback((frozenCols, frozenRows) => {
     const loop = () => {
       mazeAnimationFrameId.current = requestAnimationFrame(loop);
-      
+
       const now = performance.now();
       const delta = now - lastUpdateTime.current;
       const ctx = ctxRef.current;
       const localCells = cells.current;
       let localCurrent = currentCell.current;
       const localStack = stack.current;
-      
+
       const { width, height, cellSize } = dimsRef.current;
 
       ctx.fillStyle = "#c6c6c6";
@@ -348,17 +365,18 @@ const Maze = () => {
           if (localCells[0]) localCells[0].isStart = true;
 
           if (!offscreenCanvasRef.current) offscreenCanvasRef.current = document.createElement("canvas");
-          
+
           // Guardar a imagen estática
           drawMazeToOffscreen(frozenCols, frozenRows, localCells);
-          
+
           if (mazeAnimationFrameId.current) cancelAnimationFrame(mazeAnimationFrameId.current);
-          
+
           redrawAll();
           currentCell.current = localCurrent;
           setIsGenerated(true);
           isGeneratingMazeRef.current = false;
-          
+          stopGenerating();
+
           generatePlayer();
           return;
         }
@@ -366,7 +384,7 @@ const Maze = () => {
       currentCell.current = localCurrent;
     };
     return loop;
-  }, [updateInterval, drawMazeToOffscreen, redrawAll, generatePlayer]);
+  }, [updateInterval, drawMazeToOffscreen, redrawAll, generatePlayer, stopGenerating]);
 
   const generateMaze = useCallback((requestedCols, requestedRows) => {
     const cols = requestedCols ?? gridSize.cols;
@@ -374,16 +392,17 @@ const Maze = () => {
 
     if (mazeAnimationFrameId.current) cancelAnimationFrame(mazeAnimationFrameId.current);
     if (playerAnimationFrameId.current) cancelAnimationFrame(playerAnimationFrameId.current);
-    playerRef.current = null; 
+    playerRef.current = null;
 
     setIsGenerated(false);
     setGameStatus("playing");
     isGeneratingMazeRef.current = true;
+    playGenerating();
     cells.current = [];
     stack.current = [];
 
     const cellSizeToUse = computeCellSize(cols, rows);
-    
+
     applyCanvasSize(cellSizeToUse, cols, rows);
 
     for (let j = 0; j < rows; j++) {
@@ -400,20 +419,22 @@ const Maze = () => {
     const loop = createDrawMazeLoop(cols, rows);
     mazeAnimationFrameId.current = requestAnimationFrame(loop);
 
-  }, [createDrawMazeLoop, gridSize, computeCellSize, applyCanvasSize]);
+  }, [createDrawMazeLoop, gridSize, computeCellSize, applyCanvasSize, playGenerating]);
 
   const resetGame = useCallback((cols, rows) => {
     console.log("Resetting game...");
     setIsRunning(false);
     setGameStatus("playing");
     setIsGenerated(false);
+    stopHeartbeat();
+    setIsHeartbeatPlaying(false);
 
     if (popupRef.current) {
       popupRef.current.classList.remove("visible");
       popupRef.current.classList.add("hidden");
     }
     generateMaze(cols, rows);
-  }, [generateMaze]);
+  }, [generateMaze, stopHeartbeat]);
 
   const movePlayerBy = (deltaX, deltaY) => {
     if (!isRunning) setIsRunning(true);
@@ -427,6 +448,7 @@ const Maze = () => {
     const nextCellIndex = index(nextIndexI, nextIndexJ, dimsRef.current.cols, dimsRef.current.rows);
 
     if (nextCellIndex === -1) {
+      // playBounce();
       player.triggerBounce({ x: deltaX, y: deltaY });
       return;
     }
@@ -457,23 +479,23 @@ const Maze = () => {
     const handleResize = () => {
       if (isGeneratingMazeRef.current) return;
       if (suppressAutoResizeRef.current) { suppressAutoResizeRef.current = false; return; }
-      
+
       const container = containerRef.current;
       if (!container || !canvasRef.current) return;
 
       // Recalcular tamaño basado en la grid actual
       const { cols, rows } = dimsRef.current; // Usamos la grid "viva" en el canvas
       const newCellSize = computeCellSize(cols, rows);
-      
+
       applyCanvasSize(newCellSize, cols, rows);
 
       if (!offscreenCanvasRef.current) offscreenCanvasRef.current = document.createElement("canvas");
-      
+
       // Actualizar celdas con nuevas coordenadas
       cells.current.forEach(cell => {
-          cell.size = newCellSize;
-          cell.x = cell.i * newCellSize;
-          cell.y = cell.j * newCellSize;
+        cell.size = newCellSize;
+        cell.x = cell.i * newCellSize;
+        cell.y = cell.j * newCellSize;
       });
 
       drawMazeToOffscreen(cols, rows, cells.current);
@@ -486,16 +508,16 @@ const Maze = () => {
     handleResize(); // Init
 
     return () => {
-        window.removeEventListener("resize", handleResize);
-        if (mazeAnimationFrameId.current) cancelAnimationFrame(mazeAnimationFrameId.current);
-        if (playerAnimationFrameId.current) cancelAnimationFrame(playerAnimationFrameId.current);
+      window.removeEventListener("resize", handleResize);
+      if (mazeAnimationFrameId.current) cancelAnimationFrame(mazeAnimationFrameId.current);
+      if (playerAnimationFrameId.current) cancelAnimationFrame(playerAnimationFrameId.current);
     };
   }, [computeCellSize, applyCanvasSize, redrawAll, drawMazeToOffscreen]);
 
   // Keyboard
   useEffect(() => {
     function handleKeyDown(e) {
-      if (isVoiceListeningRef.current) return;
+      if (isVoiceListeningRef.current || isMenuOpenRef.current) return;
       if (!playerRef.current) return;
       switch (e.key) {
         case "ArrowUp": case "w": movePlayerBy(0, -1); break;
@@ -582,20 +604,22 @@ const Maze = () => {
   useEffect(() => {
     if (gameStatus === "playing") return;
     const popup = popupRef.current;
-    
+
     if (voiceControl?.isListening) try { voiceControl.stop(); } catch (e) { console.warn(e); }
     if (listeningPopupRef.current) {
-        listeningPopupRef.current.classList.remove("visible");
-        listeningPopupRef.current.classList.add("hidden");
+      listeningPopupRef.current.classList.remove("visible");
+      listeningPopupRef.current.classList.add("hidden");
     }
 
     if (gameStatus === "won") {
       popup.classList.remove("defeat");
       popup.classList.add("victory");
+      playWin();
       confettiRef.current?.start(3500, { initialCount: 140, streamInterval: 220 });
     } else if (gameStatus === "lost") {
       popup.classList.remove("victory");
       popup.classList.add("defeat");
+      playDefeat();
     }
 
     if (popup) {
@@ -604,6 +628,20 @@ const Maze = () => {
     }
   }, [gameStatus, voiceControl]);
 
+  useEffect(() => {
+    if (isRunning && time > 0 && time <= initialTime * 0.2) {
+      if (!isHeartbeatPlaying) {
+        playHeartbeat();
+        setIsHeartbeatPlaying(true);
+      }
+    } else {
+      if (isHeartbeatPlaying) {
+        stopHeartbeat();
+        setIsHeartbeatPlaying(false);
+      }
+    }
+  }, [time, isRunning, initialTime, playHeartbeat, stopHeartbeat, isHeartbeatPlaying]);
+
   return (
     <div className="maze-container" ref={containerRef}>
       <LanguageSelector
@@ -611,7 +649,7 @@ const Maze = () => {
         onLanguageChange={(lang) => {
           const map = { 'es': 'es-CO', 'en': 'en-US', 'de': 'de-DE' };
           setCurrentLanguage(map[lang] || lang);
-          if (voiceControl?.isListening) try { voiceControl.stop(); } catch (e) {}
+          if (voiceControl?.isListening) try { voiceControl.stop(); } catch (e) { }
         }}
       />
       <Menu
@@ -620,19 +658,20 @@ const Maze = () => {
         initialTime={initialTime}
         onSetInitialTime={setInitialTime}
         gridSize={gridSize}
+        onMenuStateChange={(isOpen) => { isMenuOpenRef.current = isOpen; }}
         onSetGridSize={(newSize) => {
           const cols = Math.max(3, Math.min(100, parseInt(newSize.cols ?? gridSize.cols, 10)));
           const rows = Math.max(3, Math.min(100, parseInt(newSize.rows ?? gridSize.rows, 10)));
-          
+
           setGridSize({ cols, rows });
-          
+
           resetGame(cols, rows);
         }}
       />
-      
+
       <div className="game-status-popup-container hidden" ref={popupRef}>
         <div className="game-status-popup">
-          <img className="close" src={`${baseUrl}assets/icons/close.svg`} onClick={() => popupRef.current?.classList.add("hidden")} alt="close" />
+          <img className="close" src={`${baseUrl}assets/icons/close.svg`} onClick={() => { playElementSelected(); popupRef.current?.classList.add("hidden"); }} alt="close" />
           {gameStatus === "won" ? (
             <>
               <h2>{t('victory')}</h2>
@@ -648,7 +687,7 @@ const Maze = () => {
             </>
           ) : null}
           {/* Al hacer retry sin argumentos, usa el estado actual (memoria) */}
-          <button onClick={() => resetGame()}>{t('retry')}</button>
+          <button onClick={() => { playElementSelected(); resetGame(); }}>{t('retry')}</button>
         </div>
       </div>
 
@@ -659,7 +698,7 @@ const Maze = () => {
       </div>
 
       <h2>{t('main_title')}</h2>
-      
+
       <Timer
         isRunning={isRunning}
         setIsRunning={setIsRunning}
@@ -670,21 +709,21 @@ const Maze = () => {
         onTimeUp={() => setGameStatus("lost")}
         initialTime={initialTime}
       />
-      
+
       <canvas ref={canvasRef}></canvas>
 
       <div className="generate-button-voice-control-container">
-        <button className="action-button generateButton" onClick={() => generateMaze()}>{t('generate_maze')}</button>
+        <button className="action-button generateButton" onClick={() => { playElementSelected(); generateMaze(); }}>{t('generate_maze')}</button>
         <button
           className="action-button activate-controls"
-          onClick={() => setManualControls(!isManualControls)}
+          onClick={() => { playElementSelected(); setManualControls(!isManualControls); }}
           disabled={!isGenerated || voiceControl.isListening}>
           {isManualControls ? t('deactivate_manual_controls') : t('activate_manual_controls')}
         </button>
         <button
           type="button"
           className={`mic-button ${voiceControl.isListening ? "active" : ""}`}
-          onClick={() => voiceControl.toggle?.()}
+          onClick={() => { playElementSelected(); voiceControl.toggle?.(); }}
           disabled={!voiceControl.isSupported || isManualControls || !isGenerated}
         >
           <img src={`${baseUrl}assets/icons/${voiceControl.isListening ? 'mic-on.svg' : 'mic-off.svg'}`} alt="mic" />
@@ -693,12 +732,12 @@ const Maze = () => {
       </div>
 
       <div className={`maze-controls ${isManualControls ? "visible" : "hidden"}`}>
-        <button className="control-button up" onClick={() => movePlayerBy(0, -1)}><img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Up" /></button>
-        <button className="control-button left" onClick={() => movePlayerBy(-1, 0)}><img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Left" /></button>
-        <button className="control-button right" onClick={() => movePlayerBy(1, 0)}><img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Right" /></button>
-        <button className="control-button down" onClick={() => movePlayerBy(0, 1)}><img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Down" /></button>
+        <button className="control-button up" onClick={() => { playElementSelected(); movePlayerBy(0, -1); }}><img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Up" /></button>
+        <button className="control-button left" onClick={() => { playElementSelected(); movePlayerBy(-1, 0); }}><img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Left" /></button>
+        <button className="control-button right" onClick={() => { playElementSelected(); movePlayerBy(1, 0); }}><img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Right" /></button>
+        <button className="control-button down" onClick={() => { playElementSelected(); movePlayerBy(0, 1); }}><img src={`${baseUrl}assets/icons/arrow-up.svg`} alt="Down" /></button>
       </div>
-      
+
       <Confetti ref={confettiRef} />
     </div>
   );

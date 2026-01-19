@@ -15,3 +15,15 @@
     justify-content: center;
     align-items: center;
 }
+
+.timer {
+    &.danger {
+        color: #ff0000;
+        text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        border: solid 1px rgba(255, 0, 0, 0.5);
+    }
+
+    &.shake {
+        animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both infinite;
+    }
+}

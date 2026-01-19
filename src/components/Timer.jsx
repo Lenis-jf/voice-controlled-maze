@@ -51,8 +51,12 @@ const Timer = ({ isRunning, setIsRunning, isGenerated, time, setTime, onTimeUp, 
 		}
 	}, [initialTime]);
 
+	const isDanger = time <= initialTime * 0.3;
+	const shouldShake = isDanger && isRunning && gameStatus !== 'won';
+	const isRed = isDanger && gameStatus !== 'won';
+
 	return (
-		<div className="timer">
+		<div className={`timer ${isRed ? 'danger' : ''} ${shouldShake ? 'shake' : ''}`}>
 			{formatTime(time).minutes}:{formatTime(time).seconds}
 		</div>
 	);

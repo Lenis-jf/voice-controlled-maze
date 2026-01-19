@@ -7,3 +7,5 @@ $glass-bg: rgba(255, 255, 255, 0.15);
 $glass-border: rgba(255, 255, 255, 0.25);
 $glass-blur: 12px;
 $text-color: #000000;
+
+$responsive-small-fs: clamp(0.8rem, 1.2vw + 0.2rem, 1.2rem);

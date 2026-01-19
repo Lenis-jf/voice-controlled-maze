@@ -22,6 +22,8 @@
     "Maze Size": "Tamaño del laberinto",
     "Columns": "Columnas:",
     "Rows": "Filas:",
+    "alert_min": "El valor mínimo es {{min}}",
+    "alert_max": "El valor máximo es {{max}}",
 
     "lang.es": "Español",
     "lang.en": "Inglés",
