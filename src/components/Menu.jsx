@@ -19,14 +19,18 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
     }
 
     const applyTimer = () => {
-        const secs = isNaN(localTimerSeconds) ? 60 : Math.max(5, Math.min(3600, Number(localTimerSeconds)));
+        const secs = isNaN(localTimerSeconds) ? 60 : Math.max(5, Math.min(1800, Number(localTimerSeconds)));
         onSetInitialTime?.(secs * 1000);
         setSelectedDifficulty(null);
     };
 
     const applyGridSize = () => {
-        const cols = isNaN(localCols) ? gridSize?.cols || 15 : Number(localCols);
-        const rows = isNaN(localRows) ? gridSize?.rows || 10 : Number(localRows);
+        let cols = isNaN(localCols) ? gridSize?.cols || 15 : Number(localCols);
+        let rows = isNaN(localRows) ? gridSize?.rows || 10 : Number(localRows);
+
+        cols = Math.max(3, Math.min(30, cols));
+        rows = Math.max(3, Math.min(30, rows));
+
         onSetGridSize?.({ cols, rows });
         setSelectedDifficulty(null);
     };
@@ -107,8 +111,8 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
                             {t("Seconds")}
                             <input
                                 type="number"
-                                min="20"
-                                max="300"
+                                min="10"
+                                max="1800"
                                 value={localTimerSeconds}
                                 onChange={(e) => setLocalTimerSeconds(e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(e, applyTimer)}
@@ -126,8 +130,8 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
                                 {t("Columns")}
                                 <input
                                     type="number"
-                                    min="5"
-                                    max="100"
+                                    min="3"
+                                    max="30"
                                     value={localCols}
                                     onChange={(e) => setLocalCols(e.target.value)}
                                     onKeyDown={(e) => handleKeyDown(e, applyGridSize)}
@@ -138,8 +142,8 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
                                 {t("Rows")}
                                 <input
                                     type="number"
-                                    min="5"
-                                    max="40"
+                                    min="3"
+                                    max="30"
                                     value={localRows}
                                     onChange={(e) => setLocalRows(e.target.value)}
                                     onKeyDown={(e) => handleKeyDown(e, applyGridSize)}

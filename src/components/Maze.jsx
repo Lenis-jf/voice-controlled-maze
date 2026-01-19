@@ -621,8 +621,8 @@ const Maze = () => {
         onSetInitialTime={setInitialTime}
         gridSize={gridSize}
         onSetGridSize={(newSize) => {
-          const cols = Math.max(5, Math.min(100, parseInt(newSize.cols ?? gridSize.cols, 10)));
-          const rows = Math.max(5, Math.min(100, parseInt(newSize.rows ?? gridSize.rows, 10)));
+          const cols = Math.max(3, Math.min(100, parseInt(newSize.cols ?? gridSize.cols, 10)));
+          const rows = Math.max(3, Math.min(100, parseInt(newSize.rows ?? gridSize.rows, 10)));
           
           setGridSize({ cols, rows });
           
