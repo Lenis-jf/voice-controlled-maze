@@ -28,5 +28,12 @@
     "lang.es": "Español",
     "lang.en": "Inglés",
     "lang.de": "Alemán",
-    "select_language_label": "Seleccionar idioma"
+    "select_language_label": "Seleccionar idioma",
+    "info_popup_title": "¡Bienvenido a Voice Maze!",
+    "info_how_to_play": "Navega por el laberinto hasta la salida antes de que se agote el tiempo.",
+    "info_maze_options": "Puedes personalizar la generación del laberinto usando las opciones del menú. Ajusta los niveles de dificultad, configura la duración del temporizador y cambia las dimensiones del laberinto a tu gusto.",
+    "info_languages": "El juego soporta español, inglés y alemán. Puedes encontrar el selector de idioma en la esquina superior de la pantalla.",
+    "info_controls": "Puedes controlar al jugador moviéndose por el laberinto manualmente usando las teclas WASD o las flechas del teclado.",
+    "info_voice_commands_detail": "¡Alternativamente, activa el control por voz para moverte usando comandos de voz! Los comandos pueden variar desde direcciones simples hasta instrucciones más complejas dependiendo del idioma elegido.",
+    "info_close": "¡Entendido!"
 }

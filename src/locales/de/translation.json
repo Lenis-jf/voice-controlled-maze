@@ -26,5 +26,12 @@
     "lang.es": "Spanisch",
     "lang.en": "Englisch",
     "lang.de": "Deutsch",
-    "select_language_label": "Sprache auswählen"
+    "select_language_label": "Sprache auswählen",
+    "info_popup_title": "Willkommen bei Voice Maze!",
+    "info_how_to_play": "Navigiere durch das Labyrinth zum Ausgang, bevor die Zeit abläuft.",
+    "info_maze_options": "Du kannst die Labyrinthgenerierung über die Menüoptionen anpassen. Schwierigkeitsstufen, Timer-Dauer und Labyrinthgröße lassen sich nach Wunsch einstellen.",
+    "info_languages": "Das Spiel unterstützt Spanisch, Englisch und Deutsch. Die Sprachauswahl findest du in der oberen Ecke des Bildschirms.",
+    "info_controls": "Du kannst den Spieler manuell mit den WASD-Tasten oder den Pfeiltasten steuern.",
+    "info_voice_commands_detail": "Alternativ kannst du die Sprachsteuerung aktivieren! Die Befehle reichen von einfachen Richtungen bis hin zu komplexeren Anweisungen.",
+    "info_close": "Verstanden!"
 }

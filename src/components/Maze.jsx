@@ -20,7 +20,6 @@ import heartbeat from "../../public/assets/sounds/heart-beat-sound.mp3";
 import bounceSound from "../../public/assets/sounds/bouncing-sound.mp3";
 import generating2 from "../../public/assets/sounds/generating-maze-sound-2.mp3";
 import playerMovementSound from "../../public/assets/sounds/player-movement-sound.wav";
-import roundStartSound from "../../public/assets/sounds/round-start.mp3";
 
 // Stylized 3D computer keyboard focusing on WASD keys. The keys are pressed one by one, smoothly going down and up, with a subtle glow when pressed. Simple materials, low realism, old-school video game style (early 2010s). Soft lighting, dark game-like background, slightly angled camera. Clear tutorial animation, short looping video.
 
@@ -197,6 +196,7 @@ const Maze = () => {
 
   const [currentLang, setCurrentLanguage] = useState(i18n.language || "de-DE");
   const [transcript, setTranscript] = useState("");
+  const [lastCommandId, setLastCommandId] = useState(0); // Para forzar refresh visual
   const [dots, setDots] = useState("");
   const [isGenerated, setIsGenerated] = useState(false);
   const [time, setTime] = useState(60000);
@@ -213,7 +213,6 @@ const Maze = () => {
   const audioUnlockedRef = useRef(false);
   
   // Refs para los sonidos problemáticos
-  const roundStartSoundRef = useRef(null);
   const bounceSoundRef = useRef(null);
   const movementSoundRef = useRef(null);
   
@@ -235,18 +234,13 @@ const Maze = () => {
   const [playWin] = useSound(winSound, { volume: 1.0 });
   const [playElementSelected] = useSound(uiElementSelectionSound, { volume: 1.0 });
   const [playDefeat] = useSound(defeatSound, { volume: 0.8 });
-  const [playGenerating, { stop: stopGenerating }] = useSound(generating, { loop: true, volume: 0.8 });
+  const [playGenerating, { stop: stopGenerating }] = useSound(generating, { loop: true, volume: 0.5 });
   const [playGenerating2, { stop: stopGenerating2 }] = useSound(generating2, { loop: true, volume: 0.8 });
-  const [playHeartbeat, { stop: stopHeartbeat }] = useSound(heartbeat, { loop: true, volume: 1.5 });
-  const [, { sound: roundStartHowl }] = useSound(roundStartSound, { volume: 1.0 });
+  const [playHeartbeat, { stop: stopHeartbeat }] = useSound(heartbeat, { loop: true, volume: 2 });
   const [, { sound: bounceHowl }] = useSound(bounceSound, { volume: 1.0 });
   const [, { sound: movementHowl }] = useSound(playerMovementSound, { volume: 0.2 });
 
   // Guardar los howls en refs cuando se cargan
-  useEffect(() => {
-    if (roundStartHowl) roundStartSoundRef.current = roundStartHowl;
-  }, [roundStartHowl]);
-  
   useEffect(() => {
     if (bounceHowl) bounceSoundRef.current = bounceHowl;
   }, [bounceHowl]);
@@ -256,12 +250,6 @@ const Maze = () => {
   }, [movementHowl]);
 
   // Funciones wrapper para reproducir usando refs
-  const playRoundStart = useCallback(() => {
-    if (roundStartSoundRef.current) {
-      roundStartSoundRef.current.play();
-    }
-  }, []);
-
   const playBounce = useCallback(() => {
     if (bounceSoundRef.current) {
       bounceSoundRef.current.play();
@@ -507,9 +495,7 @@ const Maze = () => {
     if (gameStatusRef.current !== "playing") return;
     if (!isRunningRef.current) {
       setIsRunning(true);
-      isRunningRef.current = true; // Actualizar inmediatamente para evitar múltiples llamadas
-      ensureAudioUnlocked();
-      playRoundStart();
+      isRunningRef.current = true;
     }
     const player = playerRef.current;
     const playerCell = playerCellRef.current;
@@ -641,14 +627,17 @@ const Maze = () => {
 
   // Voice Control
   const handleVoiceCommand = ({ transcript: recognized, confidence }) => {
-    if (confidence && confidence < 0.5) return;
+    
+    // Actualizar siempre el ID para feedback visual, incluso si el texto es igual
     setTranscript(String(recognized || ""));
+    setLastCommandId(prev => prev + 1);
 
     const commands = interpretSequence(recognized);
     if (commands.length === 0) {
       const one = interpretVoiceCommand(recognized);
       if (one) commands.push(one);
     }
+    
     if (commands.length > 0) {
       enqueueCommands(commands);
       processQueue();
@@ -665,20 +654,27 @@ const Maze = () => {
     if (commandQueueRef.current.length === 0) return;
     processingQueueRef.current = true;
 
-    const firstCmd = commandQueueRef.current.shift();
-    executeCommand(firstCmd);
-
-    if (commandQueueRef.current.length > 0) {
-      const next = () => {
-        const cmd = commandQueueRef.current.shift();
-        if (!cmd) { processingQueueRef.current = false; return; }
+    const processNext = () => {
+      const cmd = commandQueueRef.current.shift();
+      if (!cmd) {
+        processingQueueRef.current = false;
+        return;
+      }
+      
+      try {
         executeCommand(cmd);
-        requestAnimationFrame(next);
-      };
-      requestAnimationFrame(next);
-    } else {
-      processingQueueRef.current = false;
-    }
+      } catch (error) {
+        console.error("Error executing voice command:", error);
+      }
+      
+      if (commandQueueRef.current.length > 0) {
+        requestAnimationFrame(processNext);
+      } else {
+        processingQueueRef.current = false;
+      }
+    };
+
+    requestAnimationFrame(processNext);
   }
 
   function executeCommand(command) {
@@ -692,7 +688,11 @@ const Maze = () => {
     }
   }
 
-  const voiceControl = useVoiceControl({ onResult: handleVoiceCommand, lang: currentLang || "en-US" });
+  const voiceControl = useVoiceControl({ 
+    onResult: handleVoiceCommand, 
+    lang: currentLang || "en-US",
+    continuous: false 
+  });
 
   const isVoiceListeningRef = useRef(false);
 
@@ -802,9 +802,9 @@ const Maze = () => {
         </div>
       </div>
 
-      <div className={`listening-popup ${voiceControl.isListening ? "visible" : "hidden"}`} ref={listeningPopupRef}>
+      <div className={`listening-popup ${voiceControl.isListening ? "visible" : "hidden"}`} ref={listeningPopupRef} key={lastCommandId}>
         <h3>{`${t('listening')}${dots}`}</h3>
-        <img src={`${baseUrl}assets/icons/listening.svg`} alt="listening" />
+        <img src={`${baseUrl}assets/icons/listening.svg`} alt="listening" className={lastCommandId > 0 ? "pulse-animation" : ""} />
         <p>{t('recognized_command')}: {transcript}</p>
       </div>
 

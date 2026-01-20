@@ -20,6 +20,7 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
     const { t, i18n } = useTranslation();
 
     useEffect(() => {
+        playElementSelected();
         onMenuStateChange?.(menuOpen);
     }, [menuOpen]);
 
@@ -54,7 +55,7 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
     };
 
     const toggleMenu = () => {
-        playElementSelected();
+        // playElementSelected();
         console.log("Toggling menu");
         console.log("Menu is currently:", menuOpen ? "Open" : "Closed");
 

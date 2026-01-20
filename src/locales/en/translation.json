@@ -26,5 +26,12 @@
     "lang.es": "Spanish",
     "lang.en": "English",
     "lang.de": "German",
-    "select_language_label": "Select Language"
+    "select_language_label": "Select Language",
+    "info_popup_title": "Welcome to Voice Maze!",
+    "info_how_to_play": "Navigate the maze to the exit before the timer runs out.",
+    "info_maze_options": "You can customize the maze generation using the menu options. Adjust difficulty levels, set custom timer durations, and change maze dimensions to suit your preference.",
+    "info_languages": "The game supports Spanish, English, and German. You can find the language selector in the top corner of the screen.",
+    "info_controls": "You can control the player moving through the maze manually using WASD keys or the Arrow keys.",
+    "info_voice_commands_detail": "Alternatively, activate voice control to move using voice commands! Commands can range from simple directions to more complex instructions depending on the chosen language.",
+    "info_close": "Got it!"
 }

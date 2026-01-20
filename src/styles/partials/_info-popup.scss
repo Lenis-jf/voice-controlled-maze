@@ -1,0 +1,233 @@
+@use "variables" as *;
+
+.info-trigger-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid $glass-border;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    backdrop-filter: blur($glass-blur);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+        width: 24px;
+        height: 24px;
+    }
+
+    &:hover {
+        transform: scale(1.1);
+        background: $main-active-color;
+        border-color: $main-active-color;
+        
+        img {
+             filter: invert(1) brightness(2);
+        }
+    }
+    
+    &:active {
+        transform: scale(0.95);
+    }
+}
+
+.info-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* Darker backdrop so the glass pops */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(8px);
+    padding: 20px;
+    
+    animation: overflowFadeIn 0.3s ease-out forwards;
+
+    &.closing {
+        animation: overflowFadeOut 0.3s ease-in forwards;
+    }
+}
+
+.info-popup-content.liquid-glass {
+    /* Improved Liquid Glass Effect */
+    background: rgba(255, 255, 255, 0.85); /* Slightly more opaque for readability but still glossy */
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 
+        0 8px 32px 0 rgba(31, 38, 135, 0.3),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 650px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    
+    color: $text-color;
+    position: relative;
+    font-family: $font-body;
+
+    animation: popupFadeIn 0.3s ease-out forwards;
+
+    &.closing {
+        animation: popupFadeOut 0.3s ease-in forwards;
+    }
+
+
+    /* Scrollbar styling for webkit */
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 4px;
+    }
+
+    h2 {
+        font-family: $font-titles;
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-align: center;
+        font-size: 1.8rem; /* Increased font size */
+        color: $main-active-color; /* Changed title color */
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.5);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        
+        &:hover {
+            background: $main-active-color;
+            transform: rotate(90deg);
+            img { filter: invert(1); }
+        }
+
+        img {
+            width: 20px;
+            height: 20px;
+            transition: filter 0.2s;
+        }
+    }
+
+    .info-section {
+        margin-bottom: 15px;
+        line-height: 1.6;
+        p {
+            margin: 8px 0;
+            font-size: 1.1rem; /* Increased font size */
+        }
+    }
+    
+    .action-btn {
+        display: block;
+        margin: 30px auto 0;
+        padding: 14px 40px;
+        background: $main-active-color;
+        border: none;
+        color: white;
+        border-radius: 30px;
+        cursor: pointer;
+        font-family: $font-titles;
+        font-size: 1rem;
+        transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(1, 113, 227, 0.3);
+        
+        &:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: lighten($main-active-color, 5%);
+            box-shadow: 0 6px 20px rgba(1, 113, 227, 0.4);
+        }
+        
+        &:active {
+             transform: translateY(0);
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        padding: 25px;
+        
+        h2 {
+            font-size: 1.4rem;
+        }
+
+        .info-section p {
+            font-size: 1rem;
+        }
+
+        .gifs-container {
+             height: 140px;
+        }
+    }
+}
+
+.gifs-container {
+    width: 100%;
+    height: 180px; 
+    overflow: hidden;
+    position: relative;
+    margin: 25px 0;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 
+        inset 0 3px 6px rgba(0, 0, 0, 0.15),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.9);  
+    
+    display: flex;
+    align-items: center;
+
+    .gif-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        padding: 10px;
+        
+        img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        animation: slideGif 12s infinite ease-in-out;
+    }
+
+    .gif-wrapper:nth-child(1) {
+        animation-delay: 0s;
+    }
+    .gif-wrapper:nth-child(2) {
+        animation-delay: 6s;
+    }
+}
