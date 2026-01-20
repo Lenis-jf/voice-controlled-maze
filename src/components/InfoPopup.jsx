@@ -7,23 +7,14 @@ const baseUrl = import.meta.env.VITE_PUBLIC_URL || "";
 
 const InfoPopup = () => {
     const { t } = useTranslation();
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(true);
     const [isClosing, setIsClosing] = useState(false);
     const [playElementSelected] = useSound(uiElementSelectionSound, { volume: 1.0 });
 
-    useEffect(() => {
-        // Show automatically if it's the first time in this session (or ever, if we used localStorage)
-        // User requested "entering or reloading for the first time". 
-        // Using sessionStorage ensures it shows on every new tab/window or after browser restart, 
-        // which mimics "first time loading" better for testing than localStorage (permanent).
-        // However, standard specific requirement usually implies permanent storage. 
-        // I will use localStorage but check if it exists.
-        const hasSeenPopup = localStorage.getItem('hasSeenInfoPopup');
-        if (!hasSeenPopup) {
-            setIsOpen(true);
-            localStorage.setItem('hasSeenInfoPopup', 'true');
-        }
-    }, []);
+    /* 
+       User requested the popup to show on every reload/session start regardless of previous history.
+       Removed localStorage check to ensure it defaults to open.
+    */
 
     const handleOpen = () => {
         playElementSelected();

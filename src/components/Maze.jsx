@@ -199,8 +199,8 @@ const Maze = () => {
   const [lastCommandId, setLastCommandId] = useState(0); // Para forzar refresh visual
   const [dots, setDots] = useState("");
   const [isGenerated, setIsGenerated] = useState(false);
-  const [time, setTime] = useState(60000);
-  const [initialTime, setInitialTime] = useState(60000);
+  const [time, setTime] = useState(120000);
+  const [initialTime, setInitialTime] = useState(120000);
   const [isRunning, setIsRunning] = useState(false);
   const [gameStatus, setGameStatus] = useState("playing");
   const [gridSize, setGridSize] = useState({ cols: 15, rows: 10 });

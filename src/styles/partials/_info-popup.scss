@@ -43,7 +43,8 @@
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100vh; /* Fallback */
+    height: 100dvh;
     background: rgba(0, 0, 0, 0.5); /* Darker backdrop so the glass pops */
     display: flex;
     justify-content: center;
@@ -73,7 +74,8 @@
     padding: 40px;
     max-width: 650px;
     width: 100%;
-    max-height: 90vh;
+    max-height: 90vh; /* Fallback */
+    max-height: 90dvh;
     overflow-y: auto;
     
     color: $text-color;

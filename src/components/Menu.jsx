@@ -85,7 +85,7 @@ const Menu = ({ isOpen, onClose, initialTime, onSetInitialTime, gridSize, onSetG
             case 'easy':
                 cols = 8;
                 rows = 5;
-                seconds = 60;
+                seconds = 40;
                 break;
             case 'medium':
                 cols = 15;
