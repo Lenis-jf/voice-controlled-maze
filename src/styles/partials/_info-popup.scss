@@ -11,7 +11,7 @@
     height: 50px;
     cursor: pointer;
     backdrop-filter: blur($glass-blur);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     z-index: 1000;
     display: flex;
@@ -27,12 +27,12 @@
         transform: scale(1.1);
         background: $main-active-color;
         border-color: $main-active-color;
-        
+
         img {
-             filter: invert(1) brightness(2);
+            filter: invert(1) brightness(2);
         }
     }
-    
+
     &:active {
         transform: scale(0.95);
     }
@@ -43,16 +43,16 @@
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh; /* Fallback */
+    height: 100vh;
     height: 100dvh;
-    background: rgba(0, 0, 0, 0.5); /* Darker backdrop so the glass pops */
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 2000;
     backdrop-filter: blur(8px);
     padding: 20px;
-    
+
     animation: overflowFadeIn 0.3s ease-out forwards;
 
     &.closing {
@@ -61,27 +61,25 @@
 }
 
 .info-popup-content.liquid-glass {
-    /* Improved Liquid Glass Effect */
-    background: rgba(255, 255, 255, 0.85); /* Slightly more opaque for readability but still glossy */
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(25px) saturate(180%);
     -webkit-backdrop-filter: blur(25px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 
+    box-shadow:
         0 8px 32px 0 rgba(31, 38, 135, 0.3),
         inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-    
+
     border-radius: 24px;
-    padding: 30px; /* Reduced padding slightly to give more room */
+    padding: 30px;
     display: flex;
-    flex-direction: column; /* Organize layout efficiently */
-    
+    flex-direction: column;
+
     max-width: 650px;
-    width: 90%; /* Better mobile width */
-    max-height: 85dvh; /* Use dynamic viewport height and cap it */
-    overflow: visible; /* Changed from hidden to visible so absolute children (like dropdowns) are not clipped */
-    
+    width: 90%;
+    max-height: 85dvh;
+    overflow: visible;
+
     color: $text-color;
-    position: relative;
     font-family: $font-body;
 
     animation: popupFadeIn 0.3s ease-out forwards;
@@ -89,13 +87,13 @@
     &.closing {
         animation: popupFadeOut 0.3s ease-in forwards;
     }
-    
+
     .popup-header-stacked {
         display: flex;
         flex-direction: column;
         align-items: center;
         margin-bottom: 2rem;
-        padding-right: 40px; /* Space for close button if needed, though title is centered */
+        padding-right: 40px;
         gap: 15px;
         text-align: center;
         width: 100%;
@@ -103,91 +101,60 @@
         h2 {
             font-family: $font-titles;
             margin: 0;
-            font-size: 2.4rem;
+            font-size: clamp(1.5rem, 2.5vw + 0.5rem, 2.5rem);
             color: $main-active-color;
             line-height: 1.2;
             text-align: left;
         }
 
         .popup-lang-selector-wrapper {
-            position: relative;
+            position: absolute;
             z-index: 100;
             display: flex;
             justify-content: center;
             width: 100%;
-            
-            div.language-selector-container {
-                position: relative;
-                top: auto;
-                right: auto;
-                background: transparent;
-                padding: 0;
-                
-                button.lang-glass-button {
-                    background-color: rgba(255, 255, 255, 1.0) ;
-                    border: 1px solid rgba(255, 255, 255, 0.5);
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Subtle shadow to lift it */
-                    
-                    &:hover {
-                        background: rgba(255, 255, 255, 0.6);
-                    }
-                }
-
-                .lang-glass-dropdown {
-                    /* Ensure it pops out correctly and is readable */
-                    z-index: 2000;
-                    background: rgba(255, 255, 255, 0.95); /* More opaque */
-                    border: 1px solid rgba(0,0,0,0.1);
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-                    
-                    /* Reset transform origin if needed or specific positioning */
-                    top: 100%;
-                    right: auto;
-                    left: 50%;
-                    transform: translateX(-50%) translateY(10px) scale(0.96);
-                    transform-origin: top center;
-                    
-                    &.visible {
-                        transform: translateX(-50%) translateY(0) scale(1);
-                    }
-                }
-            }
+            top: calc(-22.5px - 6vh);
+            right: -25px;
         }
     }
 
     /* New Scrollable Inner Container */
     .scrollable-content {
         overflow-y: auto;
-        padding-right: 10px; /* Space for scrollbar */
-        flex: 1; /* Take remaining space */
+        padding-right: 10px;
+        /* Space for scrollbar */
+        flex: 1;
+        /* Take remaining space */
         margin-bottom: 20px;
-        
+
         .info-section.sound-warning {
-             background: rgba($main-active-color, 0.1);
-             border-left: 4px solid $main-active-color;
-             padding: 10px 15px;
-             border-radius: 4px;
-             margin-bottom: 20px;
-             
-             p {
-                 font-weight: bold;
-                 color: darken($text-color, 10%);
-                 margin: 0;
-             }
+            background: rgba($main-active-color, 0.1);
+            border-left: 4px solid $main-active-color;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+
+            p {
+                font-weight: bold;
+                color: darken($text-color, 10%);
+                margin: 0;
+            }
         }
 
         /* Custom Scrollbar for inner content */
         &::-webkit-scrollbar {
             width: 8px;
         }
+
         &::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.05);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 4px;
         }
+
         &::-webkit-scrollbar-thumb {
             background-color: rgba($main-active-color, 0.5);
             border-radius: 4px;
-            
+
             &:hover {
                 background-color: $main-active-color;
             }
@@ -202,9 +169,10 @@
         border: none;
         cursor: pointer;
         padding: 5px;
-        z-index: 20; /* Ensure above header elements */
+        z-index: 20;
+        /* Ensure above header elements */
         transition: transform 0.2s;
-        
+
         img {
             width: 20px;
             height: 20px;
@@ -220,15 +188,18 @@
     .info-section {
         margin-bottom: 15px;
         line-height: 1.6;
+
         p {
             margin: 8px 0;
-            font-size: 1.1rem; /* Increased font size */
+            font-size: 1.1rem;
+            /* Increased font size */
         }
     }
-    
+
     .action-btn {
         display: block;
-        margin: 0; /* Remove auto margin as it is in flex container now */
+        margin: 0;
+        /* Remove auto margin as it is in flex container now */
         padding: 12px 30px;
         background: $main-active-color;
         border: none;
@@ -239,18 +210,18 @@
         font-size: 1rem;
         transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
         box-shadow: 0 4px 15px rgba(1, 113, 227, 0.3);
-        
+
         &:hover {
             transform: translateY(-2px) scale(1.02);
             background: lighten($main-active-color, 5%);
             box-shadow: 0 6px 20px rgba(1, 113, 227, 0.4);
         }
-        
+
         &:active {
-             transform: translateY(0);
+            transform: translateY(0);
         }
     }
-    
+
     .popup-footer-controls {
         display: flex;
         flex-direction: column;
@@ -258,7 +229,7 @@
         gap: 15px;
         margin-top: 10px;
         width: 100%;
-        
+
         .dont-show-checkbox {
             display: flex;
             align-items: center;
@@ -267,14 +238,14 @@
             font-size: 0.9rem;
             user-select: none;
             color: darken($text-color, 10%);
-            
+
             input[type="checkbox"] {
                 width: 18px;
                 height: 18px;
                 cursor: pointer;
                 accent-color: $main-active-color;
             }
-            
+
             &:hover {
                 color: $main-active-color;
             }
@@ -284,7 +255,7 @@
     /* Responsive adjustments */
     @media (max-width: 768px) {
         padding: 25px;
-        
+
         h2 {
             font-size: 1.4rem;
         }
@@ -294,24 +265,24 @@
         }
 
         .gifs-container {
-             height: 140px;
+            height: 140px;
         }
     }
 }
 
 .gifs-container {
     width: 100%;
-    height: 180px; 
+    height: 180px;
     overflow: hidden;
     position: relative;
     margin: 25px 0;
     border-radius: 16px;
     background: rgba(0, 0, 0, 0.03);
     border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 
+    box-shadow:
         inset 0 3px 6px rgba(0, 0, 0, 0.15),
-        inset 0 -2px 4px rgba(255, 255, 255, 0.9);  
-    
+        inset 0 -2px 4px rgba(255, 255, 255, 0.9);
+
     display: flex;
     align-items: center;
 
@@ -326,20 +297,21 @@
         align-items: center;
         opacity: 0;
         padding: 10px;
-        
+
         img {
             max-height: 100%;
             max-width: 100%;
             object-fit: contain;
             border-radius: 8px;
         }
-        
+
         animation: slideGif 12s infinite ease-in-out;
     }
 
     .gif-wrapper:nth-child(1) {
         animation-delay: 0s;
     }
+
     .gif-wrapper:nth-child(2) {
         animation-delay: 6s;
     }
@@ -347,9 +319,11 @@
 
 .info-popup-overlay .popup-lang-selector-wrapper .language-selector-container {
     .lang-glass-button {
+        top: 0;
+        right: 0;
         background-color: rgba(255, 255, 255, 0.8);
         border: 1px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Subtle shadow to lift it */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         
         &:hover {
             background: rgba(255, 255, 255, 0.6);
@@ -357,8 +331,15 @@
     }
 
     .lang-glass-dropdown {
-        background: rgba(255, 255, 255, 0.8); /* More opaque */
+        background: rgba(255, 255, 255, 0.8);
         border: 1px solid rgba(0,0,0,0.1);
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .info-popup-overlay .popup-lang-selector-wrapper {
+        top: calc(-20px - 5vh);
+        right: -20px;
     }
 }

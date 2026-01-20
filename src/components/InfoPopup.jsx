@@ -24,7 +24,7 @@ const InfoPopup = () => {
     const handleClose = () => {
         playElementSelected();
         setIsClosing(true);
-        
+
         if (dontShowAgain) {
             localStorage.setItem('hasSeenInfoPopup', 'true');
         } else {
@@ -56,11 +56,6 @@ const InfoPopup = () => {
                     className={`info-popup-overlay ${isClosing ? 'closing' : ''}`}
                     onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
                 >
-                    <div className="popup-lang-selector-wrapper">
-                        <LanguageSelector
-                            onLanguageChange={handleLanguageChange}
-                        />
-                    </div>
                     <div className={`info-popup-content liquid-glass ${isClosing ? 'closing' : ''}`}>
 
                         <button className="close-btn" onClick={handleClose}>
@@ -69,6 +64,11 @@ const InfoPopup = () => {
 
                         <div className="popup-header-stacked">
                             <h2>{t('info_popup_title')}</h2>
+                            <div className="popup-lang-selector-wrapper">
+                                <LanguageSelector
+                                    onLanguageChange={handleLanguageChange}
+                                />
+                            </div>
                         </div>
                         <div className="scrollable-content">
                             <div className="info-section sound-warning">
@@ -104,10 +104,10 @@ const InfoPopup = () => {
 
                         <div className="popup-footer-controls">
                             <label className="dont-show-checkbox">
-                                <input 
-                                    type="checkbox" 
-                                    checked={dontShowAgain} 
-                                    onChange={toggleDontShow} 
+                                <input
+                                    type="checkbox"
+                                    checked={dontShowAgain}
+                                    onChange={toggleDontShow}
                                 />
                                 <span>{t('info_dont_show_again')}</span>
                             </label>
