@@ -118,13 +118,10 @@
         }
     }
 
-    /* New Scrollable Inner Container */
     .scrollable-content {
         overflow-y: auto;
         padding-right: 10px;
-        /* Space for scrollbar */
         flex: 1;
-        /* Take remaining space */
         margin-bottom: 20px;
 
         .info-section.sound-warning {
@@ -141,13 +138,12 @@
             }
         }
 
-        /* Custom Scrollbar for inner content */
         &::-webkit-scrollbar {
             width: 8px;
         }
 
         &::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
+            background: rgba(0, 0, 0, 0.07);
             border-radius: 4px;
         }
 
@@ -158,6 +154,22 @@
             &:hover {
                 background-color: $main-active-color;
             }
+        }
+    }
+
+    @media screen and (max-width: 500px) {
+        .scrollable-content {
+            -webkit-overflow-scrolling: touch;
+            mask-image: linear-gradient(to bottom,
+                    transparent,
+                    black 0,
+                    black calc(100% - 20vh),
+                    transparent);
+            -webkit-mask-image: linear-gradient(to bottom,
+                    transparent,
+                    black 0,
+                    black calc(100% - 20vh),
+                    transparent);
         }
     }
 
@@ -323,8 +335,8 @@
         right: 0;
         background-color: rgba(255, 255, 255, 0.8);
         border: 1px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
         &:hover {
             background: rgba(255, 255, 255, 0.6);
         }
@@ -332,14 +344,14 @@
 
     .lang-glass-dropdown {
         background: rgba(255, 255, 255, 0.8);
-        border: 1px solid rgba(0,0,0,0.1);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     }
 }
 
 @media screen and (max-width: 500px) {
     .info-popup-overlay .popup-lang-selector-wrapper {
-        top: calc(-20px - 5vh);
+        top: calc(-25px - 5vh);
         right: -20px;
     }
 }

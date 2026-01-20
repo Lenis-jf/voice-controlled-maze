@@ -9,6 +9,7 @@
     z-index: 1000;
     .lang-glass-button {
         @include liquid-glass;
+        background-color: rgba(255, 255, 255, 0.4);
         display: flex;
         align-items: center;
         gap: 8px;
@@ -62,6 +63,7 @@
 
     .lang-glass-dropdown {
         @include liquid-glass;
+        background-color: rgba(255, 255, 255, 0.4);
         position: absolute;
         top: calc(100% + 8px);
         right: 0;
