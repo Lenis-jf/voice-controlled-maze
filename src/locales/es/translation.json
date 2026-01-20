@@ -35,5 +35,7 @@
     "info_languages": "El juego soporta español, inglés y alemán. Puedes encontrar el selector de idioma en la esquina superior de la pantalla.",
     "info_controls": "Puedes controlar al jugador moviéndose por el laberinto manualmente usando las teclas WASD o las flechas del teclado.",
     "info_voice_commands_detail": "¡Alternativamente, activa el control por voz para moverte usando comandos de voz! Los comandos pueden variar desde direcciones simples hasta instrucciones más complejas dependiendo del idioma elegido.",
+    "info_sound_required": "Para una mejor experiencia, por favor activa el sonido de tu dispositivo.",
+    "info_dont_show_again": "No mostrar instrucciones automáticamente",
     "info_close": "¡Entendido!"
 }

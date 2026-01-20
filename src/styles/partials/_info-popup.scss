@@ -71,12 +71,14 @@
         inset 0 0 0 1px rgba(255, 255, 255, 0.5);
     
     border-radius: 24px;
-    padding: 40px;
+    padding: 30px; /* Reduced padding slightly to give more room */
+    display: flex;
+    flex-direction: column; /* Organize layout efficiently */
+    
     max-width: 650px;
-    width: 100%;
-    max-height: 90vh; /* Fallback */
-    max-height: 90dvh;
-    overflow-y: auto;
+    width: 90%; /* Better mobile width */
+    max-height: 85dvh; /* Use dynamic viewport height and cap it */
+    overflow: visible; /* Changed from hidden to visible so absolute children (like dropdowns) are not clipped */
     
     color: $text-color;
     position: relative;
@@ -87,54 +89,133 @@
     &.closing {
         animation: popupFadeOut 0.3s ease-in forwards;
     }
-
-
-    /* Scrollbar styling for webkit */
-    &::-webkit-scrollbar {
-        width: 8px;
-    }
-    &::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,0.2);
-        border-radius: 4px;
-    }
-
-    h2 {
-        font-family: $font-titles;
-        margin-top: 0;
-        margin-bottom: 25px;
+    
+    .popup-header-stacked {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-right: 40px; /* Space for close button if needed, though title is centered */
+        gap: 15px;
         text-align: center;
-        font-size: 1.8rem; /* Increased font size */
-        color: $main-active-color; /* Changed title color */
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 100%;
+
+        h2 {
+            font-family: $font-titles;
+            margin: 0;
+            font-size: 2.4rem;
+            color: $main-active-color;
+            line-height: 1.2;
+            text-align: left;
+        }
+
+        .popup-lang-selector-wrapper {
+            position: relative;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            
+            div.language-selector-container {
+                position: relative;
+                top: auto;
+                right: auto;
+                background: transparent;
+                padding: 0;
+                
+                button.lang-glass-button {
+                    background-color: rgba(255, 255, 255, 1.0) ;
+                    border: 1px solid rgba(255, 255, 255, 0.5);
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Subtle shadow to lift it */
+                    
+                    &:hover {
+                        background: rgba(255, 255, 255, 0.6);
+                    }
+                }
+
+                .lang-glass-dropdown {
+                    /* Ensure it pops out correctly and is readable */
+                    z-index: 2000;
+                    background: rgba(255, 255, 255, 0.95); /* More opaque */
+                    border: 1px solid rgba(0,0,0,0.1);
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+                    
+                    /* Reset transform origin if needed or specific positioning */
+                    top: 100%;
+                    right: auto;
+                    left: 50%;
+                    transform: translateX(-50%) translateY(10px) scale(0.96);
+                    transform-origin: top center;
+                    
+                    &.visible {
+                        transform: translateX(-50%) translateY(0) scale(1);
+                    }
+                }
+            }
+        }
+    }
+
+    /* New Scrollable Inner Container */
+    .scrollable-content {
+        overflow-y: auto;
+        padding-right: 10px; /* Space for scrollbar */
+        flex: 1; /* Take remaining space */
+        margin-bottom: 20px;
+        
+        .info-section.sound-warning {
+             background: rgba($main-active-color, 0.1);
+             border-left: 4px solid $main-active-color;
+             padding: 10px 15px;
+             border-radius: 4px;
+             margin-bottom: 20px;
+             
+             p {
+                 font-weight: bold;
+                 color: darken($text-color, 10%);
+                 margin: 0;
+             }
+        }
+
+        /* Custom Scrollbar for inner content */
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+        &::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba($main-active-color, 0.5);
+            border-radius: 4px;
+            
+            &:hover {
+                background-color: $main-active-color;
+            }
+        }
     }
 
     .close-btn {
         position: absolute;
         top: 20px;
         right: 20px;
-        background: rgba(255, 255, 255, 0.5);
+        background: transparent;
         border: none;
-        border-radius: 50%;
         cursor: pointer;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
+        padding: 5px;
+        z-index: 20; /* Ensure above header elements */
+        transition: transform 0.2s;
         
-        &:hover {
-            background: $main-active-color;
-            transform: rotate(90deg);
-            img { filter: invert(1); }
-        }
-
         img {
             width: 20px;
             height: 20px;
-            transition: filter 0.2s;
+        }
+
+        &:hover {
+            transform: scale(1.1);
         }
     }
+
+
 
     .info-section {
         margin-bottom: 15px;
@@ -147,8 +228,8 @@
     
     .action-btn {
         display: block;
-        margin: 30px auto 0;
-        padding: 14px 40px;
+        margin: 0; /* Remove auto margin as it is in flex container now */
+        padding: 12px 30px;
         background: $main-active-color;
         border: none;
         color: white;
@@ -167,6 +248,36 @@
         
         &:active {
              transform: translateY(0);
+        }
+    }
+    
+    .popup-footer-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        margin-top: 10px;
+        width: 100%;
+        
+        .dont-show-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            user-select: none;
+            color: darken($text-color, 10%);
+            
+            input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+                accent-color: $main-active-color;
+            }
+            
+            &:hover {
+                color: $main-active-color;
+            }
         }
     }
 
@@ -231,5 +342,23 @@
     }
     .gif-wrapper:nth-child(2) {
         animation-delay: 6s;
+    }
+}
+
+.info-popup-overlay .popup-lang-selector-wrapper .language-selector-container {
+    .lang-glass-button {
+        background-color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Subtle shadow to lift it */
+        
+        &:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+    }
+
+    .lang-glass-dropdown {
+        background: rgba(255, 255, 255, 0.8); /* More opaque */
+        border: 1px solid rgba(0,0,0,0.1);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
 }

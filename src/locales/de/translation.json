@@ -33,5 +33,7 @@
     "info_languages": "Das Spiel unterstützt Spanisch, Englisch und Deutsch. Die Sprachauswahl findest du in der oberen Ecke des Bildschirms.",
     "info_controls": "Du kannst den Spieler manuell mit den WASD-Tasten oder den Pfeiltasten steuern.",
     "info_voice_commands_detail": "Alternativ kannst du die Sprachsteuerung aktivieren! Die Befehle reichen von einfachen Richtungen bis hin zu komplexeren Anweisungen.",
+    "info_sound_required": "Für ein besseres Erlebnis aktivieren Sie bitte den Ton Ihres Geräts.",
+    "info_dont_show_again": "Anweisungen nicht automatisch anzeigen",
     "info_close": "Verstanden!"
 }

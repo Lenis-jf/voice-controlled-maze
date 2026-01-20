@@ -21,8 +21,6 @@ import bounceSound from "../../public/assets/sounds/bouncing-sound.mp3";
 import generating2 from "../../public/assets/sounds/generating-maze-sound-2.mp3";
 import playerMovementSound from "../../public/assets/sounds/player-movement-sound.wav";
 
-// Stylized 3D computer keyboard focusing on WASD keys. The keys are pressed one by one, smoothly going down and up, with a subtle glow when pressed. Simple materials, low realism, old-school video game style (early 2010s). Soft lighting, dark game-like background, slightly angled camera. Clear tutorial animation, short looping video.
-
 const baseUrl = import.meta.env.VITE_PUBLIC_URL || "";
 
 function index(i, j, cols, rows) {
@@ -199,8 +197,8 @@ const Maze = () => {
   const [lastCommandId, setLastCommandId] = useState(0); // Para forzar refresh visual
   const [dots, setDots] = useState("");
   const [isGenerated, setIsGenerated] = useState(false);
-  const [time, setTime] = useState(120000);
-  const [initialTime, setInitialTime] = useState(120000);
+  const [time, setTime] = useState(120000); // Initializes at 00:00
+  const [initialTime, setInitialTime] = useState(120000); // Default Medium: 2 min
   const [isRunning, setIsRunning] = useState(false);
   const [gameStatus, setGameStatus] = useState("playing");
   const [gridSize, setGridSize] = useState({ cols: 15, rows: 10 });
@@ -440,6 +438,11 @@ const Maze = () => {
   }, [updateInterval, drawMazeToOffscreen, redrawAll, generatePlayer, stopGenerating]);
 
   const generateMaze = useCallback((requestedCols, requestedRows) => {
+    // FIX SAFARI AUDIO: Resume context explicitly on user interaction
+    if (Howler.ctx && Howler.ctx.state === 'suspended') {
+        Howler.ctx.resume();
+    }
+
     const cols = requestedCols ?? gridSize.cols;
     const rows = requestedRows ?? gridSize.rows;
 

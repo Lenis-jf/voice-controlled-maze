@@ -33,5 +33,7 @@
     "info_languages": "The game supports Spanish, English, and German. You can find the language selector in the top corner of the screen.",
     "info_controls": "You can control the player moving through the maze manually using WASD keys or the Arrow keys.",
     "info_voice_commands_detail": "Alternatively, activate voice control to move using voice commands! Commands can range from simple directions to more complex instructions depending on the chosen language.",
+    "info_sound_required": "For a better experience, please enable your device sound.",
+    "info_dont_show_again": "Don't show instructions automatically",
     "info_close": "Got it!"
 }
