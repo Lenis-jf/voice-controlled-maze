@@ -223,8 +223,8 @@ body {
 
   .maze-controls {
     position: absolute;
-    bottom: clamp(3rem, calc(4rem + 3vh), 8rem);
-    right: clamp(1rem, calc(3rem + 3vw), 8rem);
+    bottom: clamp(3rem, calc(3rem + 3vh), 6rem);
+    right: clamp(1rem, calc(1rem + 3vw), 5rem);
     z-index: 100;
 
     width: 200px;
@@ -266,6 +266,7 @@ body {
       align-items: center;
       user-select: none;
       -webkit-tap-highlight-color: none;
+      -webkit-user-drag: none;
       -webkit-user-drag: none;
 
       z-index: 10;

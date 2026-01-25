@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import useSound from 'use-sound';
+import uiElementSelectionSound from "../../public/assets/sounds/ui-selection-sound.mp3";
+
 const languageOptions = (t) => [
     { code: 'es', label: t('lang.es'), flag: '🇪🇸' },
     { code: 'en', label: t('lang.en'), flag: '🇬🇧' },
@@ -17,7 +20,11 @@ const LanguageSelector = ({ currentLanguage, onLanguageChange }) => {
     const currentLanguageCode = i18n.language.split('-')[0];
     const activeLang = languages.find(lang => lang.code === currentLanguageCode) || languages[0];
 
-    const toggleDropdown = () => setIsOpen(!isOpen);
+    const toggleDropdown = () => {
+        playElementSelected();
+        setIsOpen(!isOpen);
+    }; 
+    const [playElementSelected] = useSound(uiElementSelectionSound, { volume: 1.0 });
 
     const handleSelect = (langCode) => {
         i18n.changeLanguage(langCode);
@@ -25,12 +32,15 @@ const LanguageSelector = ({ currentLanguage, onLanguageChange }) => {
         if (onLanguageChange) {
             onLanguageChange(langCode);
         }
+        playElementSelected();
         setIsOpen(false);
     };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            if (isOpen && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                // console.log("Clicked outside");
+                playElementSelected();
                 setIsOpen(false);
             }
         };
@@ -39,7 +49,7 @@ const LanguageSelector = ({ currentLanguage, onLanguageChange }) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, []);
+    }, [isOpen, playElementSelected]);
 
     return (
         <div className="language-selector-container" ref={dropdownRef}>

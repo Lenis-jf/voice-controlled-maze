@@ -16,6 +16,10 @@ const InfoPopup = () => {
     const [playElementSelected] = useSound(uiElementSelectionSound, { volume: 1.0 });
 
     const handleOpen = () => {
+        if(localStorage.getItem('hasSeenInfoPopup')) {
+            setDontShowAgain(true);
+        }
+
         playElementSelected();
         setIsOpen(true);
         setIsClosing(false);

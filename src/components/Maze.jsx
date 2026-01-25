@@ -827,7 +827,11 @@ const Maze = () => {
       <canvas ref={canvasRef}></canvas>
 
       <div className="generate-button-voice-control-container">
-        <button className="action-button generateButton" onClick={() => { playElementSelected(); generateMaze(); }}>{t('generate_maze')}</button>
+        <button className="action-button generateButton"
+          onClick={() => { playElementSelected(); generateMaze(); }}
+          disabled={isManualControls}>
+            {t('generate_maze')}
+        </button>
         <button
           className="action-button activate-controls"
           onClick={() => { playElementSelected(); setManualControls(!isManualControls); }}
