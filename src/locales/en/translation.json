@@ -22,6 +22,8 @@
     "Maze Size": "Maze Size",
     "Columns": "Columns:",
     "Rows": "Rows:",
+    "alert_min": "The minimum value is {{min}}",
+    "alert_max": "The maximum value is {{max}}",
 
     "lang.es": "Spanish",
     "lang.en": "English",

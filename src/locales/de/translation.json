@@ -22,6 +22,8 @@
     "Maze Size": "Labyrinthgröße",
     "Columns": "Spalten:",
     "Rows": "Reihen:",
+    "alert_min": "Der Mindestwert ist {{min}}",
+    "alert_max": "Der Höchstwert ist {{max}}",
 
     "lang.es": "Spanisch",
     "lang.en": "Englisch",
